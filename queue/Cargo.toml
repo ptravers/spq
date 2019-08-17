@@ -5,3 +5,4 @@ authors = ["Peter Travers <traverspw@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+nom = "5.0.0"
