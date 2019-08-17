@@ -27,6 +27,7 @@ func (s *server) nextItemHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) attachRoutes() {
 	http.HandleFunc("/health", s.healthHandler)
+  http.HandleFunc("/items/next", s.nextItemHandler)
 }
 
 func (s *server) start() {
