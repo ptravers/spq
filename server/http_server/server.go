@@ -3,18 +3,17 @@ package http_server
 import (
 	"fmt"
 	"net/http"
+  "spq_server/ports"
 )
 
-type Config struct {
+type HttpConfig struct {
 	Host string
 	Port int
 }
 
-type Ports struct {}
-
 type server struct {
-	ports  Ports
-	config Config
+	ports  ports.Ports
+	config HttpConfig
 }
 
 func (s *server) healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +36,7 @@ func (s *server) start() {
 	}
 }
 
-func StartServer(config Config, ports Ports) {
+func StartServer(config HttpConfig, ports ports.Ports) {
 	server := server{
 		ports,
 		config,
