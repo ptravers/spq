@@ -3,12 +3,13 @@ struct SortingPriorityQueue<T: Clone> {
     items: Vec<T>,
 }
 
-impl <T: Clone> SortingPriorityQueue<T> {
+#[allow(dead_code)]
+impl<T: Clone> SortingPriorityQueue<T> {
     pub fn new() -> SortingPriorityQueue<T> {
         SortingPriorityQueue { items: Vec::new() }
     }
 
-    pub fn add(& mut self, item: T) {
+    pub fn add(&mut self, item: T) {
         self.items.push(item);
     }
 
@@ -18,6 +19,10 @@ impl <T: Clone> SortingPriorityQueue<T> {
 
     pub fn peek(&self) -> Option<T> {
         return self.items.first().map(|item| item.clone());
+    }
+
+    pub fn next(&mut self) -> Option<T> {
+        return self.items.pop();
     }
 }
 
@@ -49,5 +54,27 @@ mod tests {
         queue.add(1);
 
         assert_eq!(queue.size(), 2);
+    }
+
+    #[test]
+    fn must_return_next_item() {
+        let mut queue: SortingPriorityQueue<String> = SortingPriorityQueue::new();
+        let next_item = String::from("I'm next!");
+
+        queue.add(next_item.clone());
+
+        assert_eq!(queue.next(), Some(next_item));
+    }
+
+    #[test]
+    fn must_remove_next_item_after_returning() {
+        let mut queue: SortingPriorityQueue<String> = SortingPriorityQueue::new();
+        let next_item = String::from("I'm next!");
+
+        queue.add(next_item.clone());
+
+        queue.next();
+
+        assert_eq!(queue.next(), None);
     }
 }
