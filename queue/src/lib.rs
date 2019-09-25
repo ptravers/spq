@@ -36,7 +36,6 @@ impl Stats {
         let mut next_leaf: Option<&usize> = None;
 
         for (feature_value, last_used_step) in self.features.value_to_last_returned.iter() {
-            println!("feature_value {:?} last_used_step {:?}", feature_value, last_used_step);
             if *oldest_step == 0 ||*last_used_step < *oldest_step {
                 next_leaf = Some(feature_value);
                 oldest_step = last_used_step;
