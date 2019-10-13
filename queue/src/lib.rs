@@ -38,41 +38,41 @@ fn create_hash(features: &Vec<Feature>, include_value: bool) -> u64 {
 }
 
 #[derive(Eq, Debug, Clone)]
-struct FeatureNodeStats {
+struct FeatureNodeFeatureSpace {
     feature_value: usize,
     index: u64,
     last_used_step: usize,
 }
 
-impl Ord for FeatureNodeStats {
+impl Ord for FeatureNodeFeatureSpace {
     fn cmp(&self, other: &Self) -> Ordering {
         other.last_used_step.cmp(&self.last_used_step)
     }
 }
 
-impl PartialOrd for FeatureNodeStats {
+impl PartialOrd for FeatureNodeFeatureSpace {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl PartialEq for FeatureNodeStats {
+impl PartialEq for FeatureNodeFeatureSpace {
     fn eq(&self, other: &Self) -> bool {
         self.last_used_step == other.last_used_step
     }
 }
 #[derive(Debug)]
 struct FeatureNode {
-    value_stats: BinaryHeap<FeatureNodeStats>,
+    value_stats: BinaryHeap<FeatureNodeFeatureSpace>,
     has_leaves: bool,
 }
 
 impl FeatureNode {
-    pub fn peek(&self) -> Option<&FeatureNodeStats> {
+    pub fn peek(&self) -> Option<&FeatureNodeFeatureSpace> {
         self.value_stats.peek()
     }
 
-    pub fn peek_and_update(&mut self, step: usize) -> Option<FeatureNodeStats> {
+    pub fn peek_and_update(&mut self, step: usize) -> Option<FeatureNodeFeatureSpace> {
         let next_feature_node_stats = self.value_stats.pop();
         match next_feature_node_stats.clone() {
             Some(feature_node_stats) => {
@@ -86,7 +86,7 @@ impl FeatureNode {
     }
 }
 
-struct Stats {
+struct FeatureSpace {
     total_items: usize,
     step: usize,
     root_index: u64,
@@ -94,9 +94,9 @@ struct Stats {
     feature_tree: HashMap<u64, FeatureNode>,
 }
 
-impl Stats {
-    pub fn new(step: usize, feature_space_dimension: usize) -> Stats {
-        Stats {
+impl FeatureSpace {
+    pub fn new(step: usize, feature_space_dimension: usize) -> FeatureSpace {
+        FeatureSpace {
             total_items: 0,
             step,
             root_index: 0,
@@ -189,7 +189,7 @@ impl Stats {
                         .is_none();
 
                     if value_not_present {
-                        value_stats.push(FeatureNodeStats {
+                        value_stats.push(FeatureNodeFeatureSpace {
                             feature_value: feature.value,
                             index: previous_hash,
                             last_used_step: self.step,
@@ -201,7 +201,7 @@ impl Stats {
                 None => {
                     let mut heap = BinaryHeap::new();
 
-                    heap.push(FeatureNodeStats {
+                    heap.push(FeatureNodeFeatureSpace {
                         feature_value: feature.value,
                         index: previous_hash,
                         last_used_step: self.step,
@@ -232,7 +232,7 @@ impl Stats {
 #[allow(dead_code)]
 struct SortingPriorityQueue<T: Clone + Debug + Copy + Ord> {
     step: usize,
-    stats: Stats,
+    stats: FeatureSpace,
     items: HashMap<u64, BinaryHeap<T>>,
 }
 
@@ -241,7 +241,7 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
     pub fn new(feature_space_dimension: usize) -> SortingPriorityQueue<T> {
         SortingPriorityQueue {
             step: 0,
-            stats: Stats::new(0, feature_space_dimension),
+            stats: FeatureSpace::new(0, feature_space_dimension),
             items: HashMap::new(),
         }
     }
