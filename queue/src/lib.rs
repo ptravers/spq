@@ -38,51 +38,51 @@ fn create_hash(features: &Vec<Feature>, include_value: bool) -> u64 {
 }
 
 #[derive(Eq, Debug, Clone)]
-struct FeatureNodeFeatureSpace {
+struct FeatureNodeValue {
     feature_value: usize,
     index: u64,
     last_used_step: usize,
 }
 
-impl Ord for FeatureNodeFeatureSpace {
+impl Ord for FeatureNodeValue {
     fn cmp(&self, other: &Self) -> Ordering {
         other.last_used_step.cmp(&self.last_used_step)
     }
 }
 
-impl PartialOrd for FeatureNodeFeatureSpace {
+impl PartialOrd for FeatureNodeValue {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl PartialEq for FeatureNodeFeatureSpace {
+impl PartialEq for FeatureNodeValue {
     fn eq(&self, other: &Self) -> bool {
         self.last_used_step == other.last_used_step
     }
 }
 #[derive(Debug)]
 struct FeatureNode {
-    value_stats: BinaryHeap<FeatureNodeFeatureSpace>,
+    values: BinaryHeap<FeatureNodeValue>,
     has_leaves: bool,
 }
 
 impl FeatureNode {
-    pub fn peek(&self) -> Option<&FeatureNodeFeatureSpace> {
-        self.value_stats.peek()
+    pub fn peek(&self) -> Option<&FeatureNodeValue> {
+        self.values.peek()
     }
 
-    pub fn peek_and_update(&mut self, step: usize) -> Option<FeatureNodeFeatureSpace> {
-        let next_feature_node_stats = self.value_stats.pop();
-        match next_feature_node_stats.clone() {
-            Some(feature_node_stats) => {
-                let mut updated_feature_node_stats = feature_node_stats;
-                updated_feature_node_stats.last_used_step = step;
-                self.value_stats.push(updated_feature_node_stats);
+    pub fn peek_and_update(&mut self, step: usize) -> Option<FeatureNodeValue> {
+        let next_feature_node_value = self.values.pop();
+        match next_feature_node_value.clone() {
+            Some(feature_node_value) => {
+                let mut updated_feature_node_value = feature_node_value;
+                updated_feature_node_value.last_used_step = step;
+                self.values.push(updated_feature_node_value);
             }
             None => {}
         }
-        next_feature_node_stats
+        next_feature_node_value
     }
 }
 
@@ -90,17 +90,17 @@ struct FeatureSpace {
     total_items: usize,
     step: usize,
     root_index: u64,
-    feature_space_dimension: usize,
+    dimension: usize,
     feature_tree: HashMap<u64, FeatureNode>,
 }
 
 impl FeatureSpace {
-    pub fn new(step: usize, feature_space_dimension: usize) -> FeatureSpace {
+    pub fn new(step: usize, dimension: usize) -> FeatureSpace {
         FeatureSpace {
             total_items: 0,
             step,
             root_index: 0,
-            feature_space_dimension,
+            dimension,
             feature_tree: HashMap::new(),
         }
     }
@@ -113,12 +113,12 @@ impl FeatureSpace {
             feature_node: &FeatureNode,
         ) -> Option<u64> {
             match feature_node.peek() {
-                Some(feature_node_stats) => {
+                Some(feature_node_value) => {
                     if feature_node.has_leaves {
-                        Some(feature_node_stats.index)
+                        Some(feature_node_value.index)
                     } else {
                         feature_tree
-                            .get(&feature_node_stats.index)
+                            .get(&feature_node_value.index)
                             .and_then(move |node| get_leaf(feature_tree, node))
                     }
                 }
@@ -140,16 +140,16 @@ impl FeatureSpace {
         self.step += 1;
         let mut next_node = self.root_index;
 
-        for _ in 0..self.feature_space_dimension {
+        for _ in 0..self.dimension {
             match self.feature_tree.get_mut(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
-                    let next_feature_node_stats = feature_node.peek_and_update(self.step);
+                    let next_feature_node_value = feature_node.peek_and_update(self.step);
                     maybe_next_leaf_feature =
-                        next_feature_node_stats.map(|node_stats| node_stats.index);
+                        next_feature_node_value.map(|node_value| node_value.index);
                 }
                 Some(feature_node) => {
-                    let next_feature_node_stats = feature_node.value_stats.pop();
-                    next_node = next_feature_node_stats.unwrap().index;
+                    let next_feature_node_value = feature_node.peek_and_update(self.step);
+                    next_node = next_feature_node_value.unwrap().index;
                 }
                 None => {}
             }
@@ -177,19 +177,19 @@ impl FeatureSpace {
 
             match self.feature_tree.get_mut(&hash_to_check) {
                 Some(FeatureNode {
-                    value_stats,
+                    values,
                     has_leaves: _,
                 }) => {
-                    let value_not_present = value_stats
+                    let value_not_present = values
                         .iter()
-                        .find(|&feature_stats| {
-                            feature_stats.feature_value == feature.value
-                                && feature_stats.index == previous_hash
+                        .find(|&feature_values| {
+                            feature_values.feature_value == feature.value
+                                && feature_values.index == previous_hash
                         })
                         .is_none();
 
                     if value_not_present {
-                        value_stats.push(FeatureNodeFeatureSpace {
+                        values.push(FeatureNodeValue {
                             feature_value: feature.value,
                             index: previous_hash,
                             last_used_step: self.step,
@@ -201,7 +201,7 @@ impl FeatureSpace {
                 None => {
                     let mut heap = BinaryHeap::new();
 
-                    heap.push(FeatureNodeFeatureSpace {
+                    heap.push(FeatureNodeValue {
                         feature_value: feature.value,
                         index: previous_hash,
                         last_used_step: self.step,
@@ -210,7 +210,7 @@ impl FeatureSpace {
                     self.feature_tree.insert(
                         hash_to_check,
                         FeatureNode {
-                            value_stats: heap,
+                            values: heap,
                             has_leaves: i == 1,
                         },
                     );
@@ -232,7 +232,7 @@ impl FeatureSpace {
 #[allow(dead_code)]
 struct SortingPriorityQueue<T: Clone + Debug + Copy + Ord> {
     step: usize,
-    stats: FeatureSpace,
+    feature_space: FeatureSpace,
     items: HashMap<u64, BinaryHeap<T>>,
 }
 
@@ -241,7 +241,7 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
     pub fn new(feature_space_dimension: usize) -> SortingPriorityQueue<T> {
         SortingPriorityQueue {
             step: 0,
-            stats: FeatureSpace::new(0, feature_space_dimension),
+            feature_space: FeatureSpace::new(0, feature_space_dimension),
             items: HashMap::new(),
         }
     }
@@ -258,18 +258,18 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
         self.items
             .entry(hash)
             .or_insert({
-                self.stats.add_item(&mut features_copy, hash);
+                self.feature_space.add_item(&mut features_copy, hash);
                 BinaryHeap::<T>::new()
             })
             .push(item);
     }
 
     pub fn size(&self) -> usize {
-        return self.stats.total_items;
+        return self.feature_space.total_items;
     }
 
     pub fn peek(&self) -> Option<&T> {
-        return self.stats.peek_next_leaf_feature().and_then(|next| {
+        return self.feature_space.peek_next_leaf_feature().and_then(|next| {
             self.items
                 .get(&next)
                 .and_then(|leaf_items| leaf_items.peek())
@@ -279,7 +279,7 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
     pub fn next(&mut self) -> Option<T> {
         let mut next_item: Option<T> = None;
 
-        match self.stats.use_next_leaf_feature() {
+        match self.feature_space.use_next_leaf_feature() {
             Some(next) => {
                 self.items
                     .entry(next)
