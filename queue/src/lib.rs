@@ -40,6 +40,7 @@ fn create_hash(features: &Vec<Feature>, include_value: bool) -> u64 {
 #[derive(Eq, Debug, Clone)]
 struct FeatureNodeValue {
     feature_value: usize,
+    items_at_index: usize,
     index: u64,
     last_used_step: usize,
 }
@@ -61,28 +62,52 @@ impl PartialEq for FeatureNodeValue {
         self.last_used_step == other.last_used_step
     }
 }
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 struct FeatureNode {
-    values: BinaryHeap<FeatureNodeValue>,
+    values: Vec<FeatureNodeValue>,
     has_leaves: bool,
 }
 
 impl FeatureNode {
+
+    fn find_next(&self) -> Option<usize> {
+        let mut next: Option<usize> = None;
+
+        match self.values.first().map(|head_value| head_value.last_used_step) {
+            Some(mut lowest_step) => {
+        for (i, value) in self.values.iter().enumerate() {
+            if value.last_used_step <= lowest_step && value.items_at_index > 0 {
+                next = Some(i);
+                lowest_step = value.last_used_step;
+            }
+        }
+            },
+            None => {}
+
+        }
+
+        return next
+    }
+
     pub fn peek(&self) -> Option<&FeatureNodeValue> {
-        self.values.peek()
+        self.find_next()
+            .and_then(|next_index| self.values.get(next_index))
     }
 
     pub fn peek_and_update(&mut self, step: usize) -> Option<FeatureNodeValue> {
-        let next_feature_node_value = self.values.pop();
-        match next_feature_node_value.clone() {
+        let maybe_next_index = self.find_next();
+        let next_feature_node_value = maybe_next_index.and_then(|next_index| self.values.get_mut(next_index));
+
+        match next_feature_node_value {
             Some(feature_node_value) => {
-                let mut updated_feature_node_value = feature_node_value;
-                updated_feature_node_value.last_used_step = step;
-                self.values.push(updated_feature_node_value);
+                feature_node_value.last_used_step = step;
+                feature_node_value.items_at_index -= 1;
             }
             None => {}
         }
-        next_feature_node_value
+
+        return maybe_next_index.and_then(|next_index| self.values.get(next_index)).map(|value| value.to_owned());
     }
 }
 
@@ -180,29 +205,35 @@ impl FeatureSpace {
                     values,
                     has_leaves: _,
                 }) => {
-                    let value_not_present = values
-                        .iter()
-                        .find(|&feature_values| {
+                    let maybe_value = values
+                        .iter_mut()
+                        .find(|feature_values| {
                             feature_values.feature_value == feature.value
                                 && feature_values.index == previous_hash
-                        })
-                        .is_none();
+                        });
 
-                    if value_not_present {
+                    match maybe_value {
+                        Some(value) => {
+                            value.items_at_index += 1;
+                        },
+                        None => {
                         values.push(FeatureNodeValue {
                             feature_value: feature.value,
+                            items_at_index: 1,
                             index: previous_hash,
                             last_used_step: self.step,
                         });
 
                         self.step += 1;
+                        }
                     }
                 }
                 None => {
-                    let mut heap = BinaryHeap::new();
+                    let mut values = Vec::new();
 
-                    heap.push(FeatureNodeValue {
+                    values.push(FeatureNodeValue {
                         feature_value: feature.value,
+                        items_at_index: 1,
                         index: previous_hash,
                         last_used_step: self.step,
                     });
@@ -210,7 +241,7 @@ impl FeatureSpace {
                     self.feature_tree.insert(
                         hash_to_check,
                         FeatureNode {
-                            values: heap,
+                            values: values,
                             has_leaves: i == 1,
                         },
                     );
@@ -432,5 +463,54 @@ mod tests {
         assert_eq!(queue.next(), Some(first_item));
 
         assert_eq!(queue.next(), Some(fairest_item));
+    }
+
+    #[test]
+    fn should_be_drained_by_feature_heirarchy() {
+        let mut queue = SortingPriorityQueue::<i32>::new(2);
+
+        let first_item = 4;
+        let second_last_item = 3;
+        let last_item = 2;
+        let fairest_item = 1;
+
+        let root_feature_name: String = "root".to_string();
+
+        queue.add(
+            first_item,
+            vec![
+                Feature::new(root_feature_name.clone(), 1),
+                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        );
+        queue.add(
+            second_last_item,
+            vec![
+                Feature::new(root_feature_name.clone(), 1),
+                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        );
+        queue.add(
+            last_item,
+            vec![
+                Feature::new(root_feature_name.clone(), 1),
+                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        );
+        queue.add(
+            fairest_item,
+            vec![
+                Feature::new(root_feature_name.to_string(), 2),
+                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        );
+
+        assert_eq!(queue.next(), Some(first_item));
+
+        assert_eq!(queue.next(), Some(fairest_item));
+
+        assert_eq!(queue.next(), Some(second_last_item));
+
+        assert_eq!(queue.next(), Some(last_item));
     }
 }
