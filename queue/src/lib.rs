@@ -4,6 +4,8 @@ use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
+use std::result::Result;
+use std::result::Result::{Ok, Err};
 
 #[derive(Debug, Clone)]
 struct Feature {
@@ -277,15 +279,17 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
         }
     }
 
-    pub fn add(&mut self, item: T, features: Vec<Feature>) {
-        if features.len() < 1 {
-            panic!("must have greater than zero features");
+    pub fn add(&mut self, item: T, features: Vec<Feature>) -> Result<(), &str> {
+        if features.len() != self.feature_space.dimension {
+            return Err("Invalid feature vector must have same size as feature space");
         }
+            else {
 
         let hash = create_hash(&features, true);
 
         let mut features_copy = features.clone();
 
+        return Ok({
         self.items
             .entry(hash)
             .or_insert({
@@ -293,6 +297,8 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
                 BinaryHeap::<T>::new()
             })
             .push(item);
+        })
+            }
     }
 
     pub fn size(&self) -> usize {
@@ -346,7 +352,7 @@ mod tests {
         let mut queue = SortingPriorityQueue::<i32>::new(1);
         let expected_element: Option<&i32> = Some(&1);
 
-        queue.add(1, DEFAULT_FEATURES.clone());
+        queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
 
         assert_eq!(queue.peek(), expected_element);
     }
@@ -356,8 +362,8 @@ mod tests {
         let mut queue = SortingPriorityQueue::<i32>::new(1);
         let expected_element: Option<&i32> = Some(&2);
 
-        queue.add(1, DEFAULT_FEATURES.clone());
-        queue.add(2, DEFAULT_FEATURES.clone());
+        queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
+        queue.add(2, DEFAULT_FEATURES.clone()).unwrap();
 
         assert_eq!(queue.peek(), expected_element);
         assert_eq!(queue.peek(), expected_element);
@@ -367,8 +373,8 @@ mod tests {
     fn must_increase_size_when_items_are_added() {
         let mut queue = SortingPriorityQueue::<i32>::new(1);
 
-        queue.add(1, DEFAULT_FEATURES.clone());
-        queue.add(1, DEFAULT_FEATURES.clone());
+        queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
+        queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
 
         assert_eq!(queue.size(), 2);
     }
@@ -378,7 +384,7 @@ mod tests {
         let mut queue = SortingPriorityQueue::<i32>::new(1);
         let next_item = 1;
 
-        queue.add(next_item.clone(), DEFAULT_FEATURES.clone());
+        queue.add(next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
 
         assert_eq!(queue.next(), Some(next_item));
     }
@@ -388,7 +394,7 @@ mod tests {
         let mut queue = SortingPriorityQueue::<i32>::new(1);
         let next_item = 1;
 
-        queue.add(next_item.clone(), DEFAULT_FEATURES.clone());
+        queue.add(next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
 
         assert_eq!(queue.next(), Some(next_item));
 
@@ -401,9 +407,9 @@ mod tests {
         let next_item = 2;
         let not_next_item = 1;
 
-        queue.add(next_item.clone(), DEFAULT_FEATURES.clone());
+        queue.add(next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
 
-        queue.add(not_next_item.clone(), DEFAULT_FEATURES.clone());
+        queue.add(not_next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
 
         assert_eq!(queue.next(), Some(next_item));
     }
@@ -416,12 +422,12 @@ mod tests {
         let unseen_item = 1;
         let fairest_item = 3;
 
-        queue.add(first_item.clone(), DEFAULT_FEATURES.clone());
-        queue.add(unseen_item, DEFAULT_FEATURES.clone());
+        queue.add(first_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
+        queue.add(unseen_item, DEFAULT_FEATURES.clone()).unwrap();
         queue.add(
             fairest_item,
             vec![Feature::new(LEAF_FEATURE_NAME.to_string(), 2)],
-        );
+        ).unwrap();
 
         assert_eq!(queue.next(), Some(first_item));
 
@@ -444,21 +450,21 @@ mod tests {
                 Feature::new(root_feature_name.clone(), 1),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
         queue.add(
             unseen_item,
             vec![
                 Feature::new(root_feature_name.clone(), 1),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
         queue.add(
             fairest_item,
             vec![
                 Feature::new(root_feature_name.to_string(), 2),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
 
         assert_eq!(queue.next(), Some(first_item));
 
@@ -482,28 +488,28 @@ mod tests {
                 Feature::new(root_feature_name.clone(), 1),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
         queue.add(
             second_last_item,
             vec![
                 Feature::new(root_feature_name.clone(), 1),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
         queue.add(
             last_item,
             vec![
                 Feature::new(root_feature_name.clone(), 1),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
         queue.add(
             fairest_item,
             vec![
                 Feature::new(root_feature_name.to_string(), 2),
                 Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
             ],
-        );
+        ).unwrap();
 
         assert_eq!(queue.next(), Some(first_item));
 
@@ -512,5 +518,14 @@ mod tests {
         assert_eq!(queue.next(), Some(second_last_item));
 
         assert_eq!(queue.next(), Some(last_item));
+    }
+
+    #[test]
+    fn must_validate_feature_space_size() {
+        let mut queue = SortingPriorityQueue::<i32>::new(0);
+
+        let result = queue.add(1, DEFAULT_FEATURES.clone());
+
+        assert_eq!(result.is_err(), true);
     }
 }
