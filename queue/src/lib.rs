@@ -5,28 +5,28 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::result::Result;
-use std::result::Result::{Ok, Err};
+use std::result::Result::{Err, Ok};
 
 #[derive(Debug, Clone)]
-struct Feature {
+struct FeatureValue {
     name: String,
     value: usize,
 }
 
 #[allow(dead_code)]
-impl Feature {
-    pub fn new(name: String, value: usize) -> Feature {
-        Feature { name, value }
+impl FeatureValue {
+    pub fn new(name: String, value: usize) -> FeatureValue {
+        FeatureValue { name, value }
     }
 }
 
-impl Hash for Feature {
+impl Hash for FeatureValue {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state);
     }
 }
 
-fn create_hash(features: &Vec<Feature>, include_value: bool) -> u64 {
+fn create_hash(features: &Vec<FeatureValue>, include_value: bool) -> u64 {
     let mut hasher = DefaultHasher::new();
 
     for feature in features {
@@ -72,24 +72,26 @@ struct FeatureNode {
 }
 
 impl FeatureNode {
-
     fn find_next(&self) -> Option<usize> {
         let mut next: Option<usize> = None;
 
-        match self.values.first().map(|head_value| head_value.last_used_step) {
+        match self
+            .values
+            .first()
+            .map(|head_value| head_value.last_used_step)
+        {
             Some(mut lowest_step) => {
-        for (i, value) in self.values.iter().enumerate() {
-            if value.last_used_step <= lowest_step && value.items_at_index > 0 {
-                next = Some(i);
-                lowest_step = value.last_used_step;
+                for (i, value) in self.values.iter().enumerate() {
+                    if value.last_used_step <= lowest_step && value.items_at_index > 0 {
+                        next = Some(i);
+                        lowest_step = value.last_used_step;
+                    }
+                }
             }
-        }
-            },
             None => {}
-
         }
 
-        return next
+        return next;
     }
 
     pub fn peek(&self) -> Option<&FeatureNodeValue> {
@@ -99,7 +101,8 @@ impl FeatureNode {
 
     pub fn peek_and_update(&mut self, step: usize) -> Option<FeatureNodeValue> {
         let maybe_next_index = self.find_next();
-        let next_feature_node_value = maybe_next_index.and_then(|next_index| self.values.get_mut(next_index));
+        let next_feature_node_value =
+            maybe_next_index.and_then(|next_index| self.values.get_mut(next_index));
 
         match next_feature_node_value {
             Some(feature_node_value) => {
@@ -109,7 +112,9 @@ impl FeatureNode {
             None => {}
         }
 
-        return maybe_next_index.and_then(|next_index| self.values.get(next_index)).map(|value| value.to_owned());
+        return maybe_next_index
+            .and_then(|next_index| self.values.get(next_index))
+            .map(|value| value.to_owned());
     }
 }
 
@@ -118,16 +123,26 @@ struct FeatureSpace {
     step: usize,
     root_index: u64,
     dimension: usize,
+    feature_names_hash: u64,
     feature_tree: HashMap<u64, FeatureNode>,
 }
 
 impl FeatureSpace {
-    pub fn new(step: usize, dimension: usize) -> FeatureSpace {
+    pub fn new(step: usize, features: Vec<String>) -> FeatureSpace {
+        let mut hasher = DefaultHasher::new();
+
+        for feature in features.clone() {
+            feature.hash(&mut hasher);
+        }
+
+        let feature_names_hash = hasher.finish();
+
         FeatureSpace {
             total_items: 0,
             step,
             root_index: 0,
-            dimension,
+            dimension: features.len(),
+            feature_names_hash,
             feature_tree: HashMap::new(),
         }
     }
@@ -185,7 +200,7 @@ impl FeatureSpace {
         return maybe_next_leaf_feature;
     }
 
-    pub fn add_item(&mut self, features: &mut Vec<Feature>, leaf_index: u64) {
+    pub fn add_item(&mut self, features: &mut Vec<FeatureValue>, leaf_index: u64) {
         self.total_items += 1;
         self.step += 1;
 
@@ -207,26 +222,24 @@ impl FeatureSpace {
                     values,
                     has_leaves: _,
                 }) => {
-                    let maybe_value = values
-                        .iter_mut()
-                        .find(|feature_values| {
-                            feature_values.feature_value == feature.value
-                                && feature_values.index == previous_hash
-                        });
+                    let maybe_value = values.iter_mut().find(|feature_values| {
+                        feature_values.feature_value == feature.value
+                            && feature_values.index == previous_hash
+                    });
 
                     match maybe_value {
                         Some(value) => {
                             value.items_at_index += 1;
-                        },
+                        }
                         None => {
-                        values.push(FeatureNodeValue {
-                            feature_value: feature.value,
-                            items_at_index: 1,
-                            index: previous_hash,
-                            last_used_step: self.step,
-                        });
+                            values.push(FeatureNodeValue {
+                                feature_value: feature.value,
+                                items_at_index: 1,
+                                index: previous_hash,
+                                last_used_step: self.step,
+                            });
 
-                        self.step += 1;
+                            self.step += 1;
                         }
                     }
                 }
@@ -271,34 +284,38 @@ struct SortingPriorityQueue<T: Clone + Debug + Copy + Ord> {
 
 #[allow(dead_code)]
 impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
-    pub fn new(feature_space_dimension: usize) -> SortingPriorityQueue<T> {
+    pub fn new(feature_space: Vec<String>) -> SortingPriorityQueue<T> {
         SortingPriorityQueue {
             step: 0,
-            feature_space: FeatureSpace::new(0, feature_space_dimension),
+            feature_space: FeatureSpace::new(0, feature_space),
             items: HashMap::new(),
         }
     }
 
-    pub fn add(&mut self, item: T, features: Vec<Feature>) -> Result<(), &str> {
+    pub fn add(&mut self, item: T, features: Vec<FeatureValue>) -> Result<(), &str> {
         if features.len() != self.feature_space.dimension {
             return Err("Invalid feature vector must have same size as feature space");
-        }
-            else {
+        } else {
+            let feature_names_hash = create_hash(&features, false);
 
-        let hash = create_hash(&features, true);
-
-        let mut features_copy = features.clone();
-
-        return Ok({
-        self.items
-            .entry(hash)
-            .or_insert({
-                self.feature_space.add_item(&mut features_copy, hash);
-                BinaryHeap::<T>::new()
-            })
-            .push(item);
-        })
+            if feature_names_hash != self.feature_space.feature_names_hash {
+                return Err("Invalid feature vector must have same feature names as initialization");
             }
+
+            let hash = create_hash(&features, true);
+
+            let mut features_copy = features.clone();
+
+            return Ok({
+                self.items
+                    .entry(hash)
+                    .or_insert({
+                        self.feature_space.add_item(&mut features_copy, hash);
+                        BinaryHeap::<T>::new()
+                    })
+                    .push(item);
+            });
+        }
     }
 
     pub fn size(&self) -> usize {
@@ -306,11 +323,14 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
     }
 
     pub fn peek(&self) -> Option<&T> {
-        return self.feature_space.peek_next_leaf_feature().and_then(|next| {
-            self.items
-                .get(&next)
-                .and_then(|leaf_items| leaf_items.peek())
-        });
+        return self
+            .feature_space
+            .peek_next_leaf_feature()
+            .and_then(|next| {
+                self.items
+                    .get(&next)
+                    .and_then(|leaf_items| leaf_items.peek())
+            });
     }
 
     pub fn next(&mut self) -> Option<T> {
@@ -337,19 +357,20 @@ mod tests {
 
     static LEAF_FEATURE_NAME: &str = "leaf";
     lazy_static! {
-        static ref DEFAULT_FEATURES: Vec<Feature> =
-            vec![Feature::new(LEAF_FEATURE_NAME.to_string(), 1)];
+        static ref DEFAULT_FEATURES: Vec<FeatureValue> =
+            vec![FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1)];
+        static ref DEFAULT_FEATURE_NAMES: Vec<String> = vec![LEAF_FEATURE_NAME.to_string()];
     }
 
     #[test]
     fn must_be_empty_at_creation() {
-        let queue = SortingPriorityQueue::<i32>::new(0);
+        let queue = SortingPriorityQueue::<i32>::new(vec![]);
         assert_eq!(queue.size(), 0);
     }
 
     #[test]
     fn must_contain_added_item() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
         let expected_element: Option<&i32> = Some(&1);
 
         queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
@@ -359,7 +380,7 @@ mod tests {
 
     #[test]
     fn peek_must_not_alter_contents() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
         let expected_element: Option<&i32> = Some(&2);
 
         queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
@@ -371,7 +392,7 @@ mod tests {
 
     #[test]
     fn must_increase_size_when_items_are_added() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
         queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
         queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
@@ -381,20 +402,24 @@ mod tests {
 
     #[test]
     fn must_return_next_item() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
         let next_item = 1;
 
-        queue.add(next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
+        queue
+            .add(next_item.clone(), DEFAULT_FEATURES.clone())
+            .unwrap();
 
         assert_eq!(queue.next(), Some(next_item));
     }
 
     #[test]
     fn must_remove_next_item_after_returning() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
         let next_item = 1;
 
-        queue.add(next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
+        queue
+            .add(next_item.clone(), DEFAULT_FEATURES.clone())
+            .unwrap();
 
         assert_eq!(queue.next(), Some(next_item));
 
@@ -403,31 +428,39 @@ mod tests {
 
     #[test]
     fn must_return_items_in_order() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
         let next_item = 2;
         let not_next_item = 1;
 
-        queue.add(next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
+        queue
+            .add(next_item.clone(), DEFAULT_FEATURES.clone())
+            .unwrap();
 
-        queue.add(not_next_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
+        queue
+            .add(not_next_item.clone(), DEFAULT_FEATURES.clone())
+            .unwrap();
 
         assert_eq!(queue.next(), Some(next_item));
     }
 
     #[test]
     fn must_balance_selection_by_leaf_feature() {
-        let mut queue = SortingPriorityQueue::<i32>::new(1);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
         let first_item = 2;
         let unseen_item = 1;
         let fairest_item = 3;
 
-        queue.add(first_item.clone(), DEFAULT_FEATURES.clone()).unwrap();
+        queue
+            .add(first_item.clone(), DEFAULT_FEATURES.clone())
+            .unwrap();
         queue.add(unseen_item, DEFAULT_FEATURES.clone()).unwrap();
-        queue.add(
-            fairest_item,
-            vec![Feature::new(LEAF_FEATURE_NAME.to_string(), 2)],
-        ).unwrap();
+        queue
+            .add(
+                fairest_item,
+                vec![FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 2)],
+            )
+            .unwrap();
 
         assert_eq!(queue.next(), Some(first_item));
 
@@ -436,35 +469,43 @@ mod tests {
 
     #[test]
     fn must_balance_selection_by_feature_heirarchy() {
-        let mut queue = SortingPriorityQueue::<i32>::new(2);
+        let root_feature_name: String = "root".to_string();
+        let feature_names: Vec<String> =
+            vec![root_feature_name.clone(), LEAF_FEATURE_NAME.to_string()];
+
+        let mut queue = SortingPriorityQueue::<i32>::new(feature_names);
 
         let first_item = 3;
         let unseen_item = 2;
         let fairest_item = 1;
 
-        let root_feature_name: String = "root".to_string();
-
-        queue.add(
-            first_item,
-            vec![
-                Feature::new(root_feature_name.clone(), 1),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
-        queue.add(
-            unseen_item,
-            vec![
-                Feature::new(root_feature_name.clone(), 1),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
-        queue.add(
-            fairest_item,
-            vec![
-                Feature::new(root_feature_name.to_string(), 2),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
+        queue
+            .add(
+                first_item,
+                vec![
+                    FeatureValue::new(root_feature_name.clone(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+        queue
+            .add(
+                unseen_item,
+                vec![
+                    FeatureValue::new(root_feature_name.clone(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+        queue
+            .add(
+                fairest_item,
+                vec![
+                    FeatureValue::new(root_feature_name.to_string(), 2),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
 
         assert_eq!(queue.next(), Some(first_item));
 
@@ -473,43 +514,53 @@ mod tests {
 
     #[test]
     fn should_be_drained_by_feature_heirarchy() {
-        let mut queue = SortingPriorityQueue::<i32>::new(2);
+        let root_feature_name: String = "root".to_string();
+        let feature_names: Vec<String> =
+            vec![root_feature_name.clone(), LEAF_FEATURE_NAME.to_string()];
+
+        let mut queue = SortingPriorityQueue::<i32>::new(feature_names);
 
         let first_item = 4;
         let second_last_item = 3;
         let last_item = 2;
         let fairest_item = 1;
 
-        let root_feature_name: String = "root".to_string();
-
-        queue.add(
-            first_item,
-            vec![
-                Feature::new(root_feature_name.clone(), 1),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
-        queue.add(
-            second_last_item,
-            vec![
-                Feature::new(root_feature_name.clone(), 1),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
-        queue.add(
-            last_item,
-            vec![
-                Feature::new(root_feature_name.clone(), 1),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
-        queue.add(
-            fairest_item,
-            vec![
-                Feature::new(root_feature_name.to_string(), 2),
-                Feature::new(LEAF_FEATURE_NAME.to_string(), 1),
-            ],
-        ).unwrap();
+        queue
+            .add(
+                first_item,
+                vec![
+                    FeatureValue::new(root_feature_name.clone(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+        queue
+            .add(
+                second_last_item,
+                vec![
+                    FeatureValue::new(root_feature_name.clone(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+        queue
+            .add(
+                last_item,
+                vec![
+                    FeatureValue::new(root_feature_name.clone(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+        queue
+            .add(
+                fairest_item,
+                vec![
+                    FeatureValue::new(root_feature_name.to_string(), 2),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
 
         assert_eq!(queue.next(), Some(first_item));
 
@@ -521,8 +572,17 @@ mod tests {
     }
 
     #[test]
-    fn must_validate_feature_space_size() {
-        let mut queue = SortingPriorityQueue::<i32>::new(0);
+    fn must_validate_features_size() {
+        let mut queue = SortingPriorityQueue::<i32>::new(vec![]);
+
+        let result = queue.add(1, DEFAULT_FEATURES.clone());
+
+        assert_eq!(result.is_err(), true);
+    }
+
+    #[test]
+    fn must_validate_features_exist_in_space() {
+        let mut queue = SortingPriorityQueue::<i32>::new(vec!["Different Name".to_string()]);
 
         let result = queue.add(1, DEFAULT_FEATURES.clone());
 
