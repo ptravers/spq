@@ -177,8 +177,6 @@ impl FeatureSpace {
     }
 
     pub fn use_next_leaf_feature(&mut self) -> Option<u64> {
-        let mut maybe_next_leaf_feature: Option<u64> = None;
-
         self.step += 1;
         let mut next_node = self.root_index;
 
@@ -186,18 +184,20 @@ impl FeatureSpace {
             match self.feature_tree.get_mut(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value = feature_node.peek_and_update(self.step);
-                    maybe_next_leaf_feature =
-                        next_feature_node_value.map(|node_value| node_value.index);
+                   return next_feature_node_value.map(|node_value| node_value.index);
                 }
                 Some(feature_node) => {
                     let next_feature_node_value = feature_node.peek_and_update(self.step);
-                    next_node = next_feature_node_value.unwrap().index;
+                    match next_feature_node_value.map(|node_value| node_value.index) {
+                        Some(next_index) => next_node = next_index,
+                        None => return None
+                    }
                 }
                 None => {}
             }
         }
 
-        return maybe_next_leaf_feature;
+        return None;
     }
 
     pub fn add_item(&mut self, features: &mut Vec<FeatureValue>, leaf_index: u64) {
@@ -569,6 +569,8 @@ mod tests {
         assert_eq!(queue.next(), Some(second_last_item));
 
         assert_eq!(queue.next(), Some(last_item));
+
+        assert_eq!(queue.next(), None);
     }
 
     #[test]
