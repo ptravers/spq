@@ -42,12 +42,12 @@ fn create_hash(features: &Vec<FeatureValue>, include_value: bool) -> u64 {
 struct FeatureNodeValue {
     value: usize,
     items_at_index: usize,
-    index: u64,
+    child_index: u64,
     hash: u64,
 }
 
 impl FeatureNodeValue {
-    pub fn new(name: &String, value: usize, items_at_index: usize, index: u64) -> FeatureNodeValue {
+    pub fn new(name: &String, value: usize, items_at_index: usize, child_index: u64) -> FeatureNodeValue {
         let mut hasher = DefaultHasher::new();
 
         value.hash(&mut hasher);
@@ -56,7 +56,7 @@ impl FeatureNodeValue {
         FeatureNodeValue {
             value,
             items_at_index,
-            index,
+            child_index,
             hash: hasher.finish(),
         }
     }
@@ -155,12 +155,12 @@ impl FeatureSpace {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value =
                         feature_node.peek(&self.feature_value_to_step, &self.step);
-                    return next_feature_node_value.map(|node_value| node_value.index);
+                    return next_feature_node_value.map(|node_value| node_value.child_index);
                 }
                 Some(feature_node) => {
                     let next_feature_node_value =
                         feature_node.peek(&self.feature_value_to_step, &self.step);
-                    match next_feature_node_value.map(|node_value| node_value.index) {
+                    match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
                         None => return None,
                     }
@@ -186,13 +186,13 @@ impl FeatureSpace {
                         self.step = next_step;
                     }
 
-                    return next_feature_node_value.map(|node_value| node_value.index);
+                    return next_feature_node_value.map(|node_value| node_value.child_index);
                 }
                 Some(feature_node) => {
                     let next_feature_node_value =
                         feature_node.peek_and_update(&next_step, &mut self.feature_value_to_step);
 
-                    match next_feature_node_value.map(|node_value| node_value.index) {
+                    match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
                         None => return None,
                     }
@@ -230,7 +230,7 @@ impl FeatureSpace {
                 }) => {
                     let maybe_value = values.iter_mut().find(|feature_node_value| {
                         feature_node_value.value == feature.value
-                            && feature_node_value.index == child_index
+                            && feature_node_value.child_index == child_index
                     });
 
                     match maybe_value {
