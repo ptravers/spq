@@ -292,7 +292,7 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
         }
     }
 
-    pub fn add(&mut self, item: T, features: Vec<FeatureValue>) -> Result<(), &str> {
+    pub fn add(&mut self, item: T, features: Vec<FeatureValue>) -> Result<usize, &str> {
         if features.len() != self.feature_space.dimension {
             return Err("Invalid feature vector must have same size as feature space");
         } else {
@@ -316,6 +316,8 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
                         BinaryHeap::<T>::new()
                     })
                     .push(item);
+
+                self.feature_space.step
             });
         }
     }
@@ -675,5 +677,17 @@ mod tests {
         assert_eq!(queue.next(), Some(last_item));
 
         assert_eq!(queue.next(), None);
+    }
+
+    fn must_increment_step_for_each_add() {
+        let mut queue = SortingPriorityQueue::<i32>::new(vec!["Different Name".to_string()]);
+
+        let add_result = queue.add(1, DEFAULT_FEATURES.clone());
+
+        assert_eq!(add_result, Result::Ok(1));
+
+        let add_result = queue.add(1, DEFAULT_FEATURES.clone());
+
+        assert_eq!(add_result, Result::Ok(2));
     }
 }
