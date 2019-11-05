@@ -90,7 +90,11 @@ impl FeatureNode {
         return next;
     }
 
-    pub fn peek(&self, feature_value_to_step: &HashMap<u64, usize>, current_step: &usize) -> Option<&FeatureNodeValue> {
+    pub fn peek(
+        &self,
+        feature_value_to_step: &HashMap<u64, usize>,
+        current_step: &usize,
+    ) -> Option<&FeatureNodeValue> {
         self.find_next(feature_value_to_step, current_step)
             .and_then(|(next_index, _)| self.values.get(next_index))
     }
@@ -149,11 +153,13 @@ impl FeatureSpace {
         for _ in 0..self.dimension {
             match self.feature_tree.get(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
-                    let next_feature_node_value = feature_node.peek(&self.feature_value_to_step, &self.step);
+                    let next_feature_node_value =
+                        feature_node.peek(&self.feature_value_to_step, &self.step);
                     return next_feature_node_value.map(|node_value| node_value.index);
                 }
                 Some(feature_node) => {
-                    let next_feature_node_value = feature_node.peek(&self.feature_value_to_step, &self.step);
+                    let next_feature_node_value =
+                        feature_node.peek(&self.feature_value_to_step, &self.step);
                     match next_feature_node_value.map(|node_value| node_value.index) {
                         Some(next_index) => next_node = next_index,
                         None => return None,
@@ -167,19 +173,24 @@ impl FeatureSpace {
     }
 
     pub fn use_next_leaf_feature(&mut self) -> Option<u64> {
-        self.step += 1;
+        let next_step = self.step + 1;
         let mut next_node = self.root_index;
 
         for _ in 0..self.dimension {
             match self.feature_tree.get_mut(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value =
-                        feature_node.peek_and_update(&self.step, &mut self.feature_value_to_step);
+                        feature_node.peek_and_update(&next_step, &mut self.feature_value_to_step);
+
+                    if next_feature_node_value.is_some() {
+                        self.step = next_step;
+                    }
+
                     return next_feature_node_value.map(|node_value| node_value.index);
                 }
                 Some(feature_node) => {
                     let next_feature_node_value =
-                        feature_node.peek_and_update(&self.step, &mut self.feature_value_to_step);
+                        feature_node.peek_and_update(&next_step, &mut self.feature_value_to_step);
 
                     match next_feature_node_value.map(|node_value| node_value.index) {
                         Some(next_index) => next_node = next_index,
@@ -212,7 +223,7 @@ impl FeatureSpace {
             current_node_index = create_hash(&next_features, i != features.len());
 
             match self.feature_tree.get_mut(&current_node_index) {
-                Some(FeatureNode{
+                Some(FeatureNode {
                     name: _,
                     values,
                     has_leaves: _,
@@ -227,12 +238,8 @@ impl FeatureSpace {
                             value.items_at_index += 1;
                         }
                         None => {
-                            let value = FeatureNodeValue::new(
-                                &feature.name,
-                                feature.value,
-                                1,
-                                child_index,
-                            );
+                            let value =
+                                FeatureNodeValue::new(&feature.name, feature.value, 1, child_index);
 
                             values.push(value.clone());
 
@@ -245,8 +252,7 @@ impl FeatureSpace {
                 None => {
                     let mut values = Vec::new();
 
-                    let value =
-                        FeatureNodeValue::new(&feature.name, feature.value, 1, child_index);
+                    let value = FeatureNodeValue::new(&feature.name, feature.value, 1, child_index);
 
                     values.push(value.clone());
 
@@ -337,7 +343,7 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
             });
     }
 
-    pub fn next(&mut self) -> Option<T> {
+    pub fn next(&mut self) -> (Option<T>, usize) {
         let mut next_item: Option<T> = None;
 
         match self.feature_space.use_next_leaf_feature() {
@@ -349,7 +355,7 @@ impl<T: Clone + Debug + Copy + Ord> SortingPriorityQueue<T> {
             None => {}
         }
 
-        return next_item;
+        return (next_item, self.feature_space.step);
     }
 }
 
@@ -414,7 +420,7 @@ mod tests {
             .add(next_item.clone(), DEFAULT_FEATURES.clone())
             .unwrap();
 
-        assert_eq!(queue.next(), Some(next_item));
+        assert_eq!(queue.next(), (Some(next_item), 2));
     }
 
     #[test]
@@ -426,9 +432,9 @@ mod tests {
             .add(next_item.clone(), DEFAULT_FEATURES.clone())
             .unwrap();
 
-        assert_eq!(queue.next(), Some(next_item));
+        assert_eq!(queue.next(), (Some(next_item), 2));
 
-        assert_eq!(queue.next(), None);
+        assert_eq!(queue.next(), (None, 2));
     }
 
     #[test]
@@ -445,7 +451,7 @@ mod tests {
             .add(not_next_item.clone(), DEFAULT_FEATURES.clone())
             .unwrap();
 
-        assert_eq!(queue.next(), Some(next_item));
+        assert_eq!(queue.next(), (Some(next_item), 3));
     }
 
     #[test]
@@ -467,9 +473,9 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(queue.next(), Some(first_item));
+        assert_eq!(queue.next(), (Some(first_item), 4));
 
-        assert_eq!(queue.next(), Some(fairest_item));
+        assert_eq!(queue.next(), (Some(fairest_item), 5));
     }
 
     #[test]
@@ -511,9 +517,9 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(queue.next(), Some(first_item));
+        assert_eq!(queue.next(), (Some(first_item), 4));
 
-        assert_eq!(queue.next(), Some(fairest_item));
+        assert_eq!(queue.next(), (Some(fairest_item), 5));
     }
 
     #[test]
@@ -565,15 +571,15 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(queue.next(), Some(first_item));
+        assert_eq!(queue.next(), (Some(first_item), 5));
 
-        assert_eq!(queue.next(), Some(fairest_item));
+        assert_eq!(queue.next(), (Some(fairest_item), 6));
 
-        assert_eq!(queue.next(), Some(second_last_item));
+        assert_eq!(queue.next(), (Some(second_last_item), 7));
 
-        assert_eq!(queue.next(), Some(last_item));
+        assert_eq!(queue.next(), (Some(last_item), 8));
 
-        assert_eq!(queue.next(), None);
+        assert_eq!(queue.next(), (None, 8));
     }
 
     #[test]
@@ -633,11 +639,11 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(queue.next(), Some(first_item));
+        assert_eq!(queue.next(), (Some(first_item), 4));
 
-        assert_eq!(queue.next(), Some(fairest_item));
+        assert_eq!(queue.next(), (Some(fairest_item), 5));
 
-        assert_eq!(queue.next(), Some(last_item));
+        assert_eq!(queue.next(), (Some(last_item), 6));
     }
 
     #[test]
@@ -660,9 +666,9 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(queue.next(), Some(first_item));
+        assert_eq!(queue.next(), (Some(first_item), 2));
 
-        assert_eq!(queue.next(), None);
+        assert_eq!(queue.next(), (None, 2));
 
         queue
             .add(
@@ -674,13 +680,14 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(queue.next(), Some(last_item));
+        assert_eq!(queue.next(), (Some(last_item), 4));
 
-        assert_eq!(queue.next(), None);
+        assert_eq!(queue.next(), (None, 4));
     }
 
+    #[test]
     fn must_increment_step_for_each_add() {
-        let mut queue = SortingPriorityQueue::<i32>::new(vec!["Different Name".to_string()]);
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
         let add_result = queue.add(1, DEFAULT_FEATURES.clone());
 
@@ -689,5 +696,18 @@ mod tests {
         let add_result = queue.add(1, DEFAULT_FEATURES.clone());
 
         assert_eq!(add_result, Result::Ok(2));
+    }
+
+    #[test]
+    fn must_increment_step_for_each_next() {
+        let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
+
+        let item: i32 = 1;
+
+        let add_result = queue.add(item, DEFAULT_FEATURES.clone());
+
+        assert_eq!(add_result, Result::Ok(1));
+
+        assert_eq!(queue.next(), (Some(item), 2));
     }
 }
