@@ -637,4 +637,43 @@ mod tests {
 
         assert_eq!(queue.next(), Some(last_item));
     }
+
+    #[test]
+    fn after_being_drained_must_accept_and_return_new_items() {
+        let feature_names: Vec<String> =
+            vec![ROOT_FEATURE_NAME.to_string(), LEAF_FEATURE_NAME.to_string()];
+
+        let mut queue = SortingPriorityQueue::<i32>::new(feature_names);
+
+        let first_item = 4;
+        let last_item = 2;
+
+        queue
+            .add(
+                first_item,
+                vec![
+                    FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+
+        assert_eq!(queue.next(), Some(first_item));
+
+        assert_eq!(queue.next(), None);
+
+        queue
+            .add(
+                last_item,
+                vec![
+                    FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
+                    FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+                ],
+            )
+            .unwrap();
+
+        assert_eq!(queue.next(), Some(last_item));
+
+        assert_eq!(queue.next(), None);
+    }
 }
