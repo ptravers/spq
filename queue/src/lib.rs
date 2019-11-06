@@ -47,7 +47,12 @@ struct FeatureNodeValue {
 }
 
 impl FeatureNodeValue {
-    pub fn new(name: &String, value: usize, items_at_index: usize, child_index: u64) -> FeatureNodeValue {
+    pub fn new(
+        name: &String,
+        value: usize,
+        items_at_index: usize,
+        child_index: u64,
+    ) -> FeatureNodeValue {
         let mut hasher = DefaultHasher::new();
 
         value.hash(&mut hasher);
@@ -150,7 +155,7 @@ impl FeatureSpace {
     pub fn peek_next_leaf_feature(&self) -> Option<u64> {
         let mut next_node = self.root_index;
 
-        for _ in 0..self.dimension {
+        for feature_space_layer in 0..self.dimension {
             match self.feature_tree.get(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value =
@@ -162,10 +167,14 @@ impl FeatureSpace {
                         feature_node.peek(&self.feature_value_to_step, &self.step);
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
+                        None if feature_space_layer != 0 => panic!(
+                            "Node that should contain values contains none {:?}",
+                            feature_node
+                        ),
                         None => return None,
                     }
                 }
-                None => {}
+                None => panic!("Index in feature space {:?} is missing", next_node),
             }
         }
 
@@ -176,7 +185,7 @@ impl FeatureSpace {
         let next_step = self.step + 1;
         let mut next_node = self.root_index;
 
-        for _ in 0..self.dimension {
+        for feature_space_layer in 0..self.dimension {
             match self.feature_tree.get_mut(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value =
@@ -194,10 +203,14 @@ impl FeatureSpace {
 
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
+                        None if feature_space_layer != 0 => panic!(
+                            "Node that should contain values contains none {:?}",
+                            feature_node
+                        ),
                         None => return None,
                     }
                 }
-                None => {}
+                None => panic!("Index in feature space {:?} is missing", next_node),
             }
         }
 
