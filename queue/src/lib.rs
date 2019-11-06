@@ -168,7 +168,7 @@ impl FeatureSpace {
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
                         None if feature_space_layer != 0 => panic!(
-                            "Node that should contain values contains none {:?}",
+                            "Feature space has lost track of number of values for each feature. Found node that should contain values but contains none {:?}",
                             feature_node
                         ),
                         None => return None,
@@ -204,7 +204,7 @@ impl FeatureSpace {
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
                         None if feature_space_layer != 0 => panic!(
-                            "Node that should contain values contains none {:?}",
+                            "Feature space has lost track of number of values for each feature. Found node that should contain values but contains none {:?}",
                             feature_node
                         ),
                         None => return None,
