@@ -1,5 +1,4 @@
 - Add returning element as a lease (?)
-- Refactor to break out feature space into a separate file
 - Refactor handle proper error cases where no element is present where it is expected to be
 - Refactor step to a better clearer name
 - Add network layer
