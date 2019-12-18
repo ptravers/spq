@@ -1,9 +1,8 @@
 [package]
-name = "queue"
+name = "sp-queue"
 version = "0.1.0"
 authors = ["Peter Travers <traverspw@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-nom = "5.0.0"
 lazy_static = "1.4.0"
