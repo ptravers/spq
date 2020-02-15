@@ -1,3 +1,9 @@
+## Rust ##
 /target
 **/*.rs.bk
 target/
+
+## Python ##
+*.pyc
+venv/
+.mypy_cache/
