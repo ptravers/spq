@@ -1,4 +1,4 @@
-.PHONY: help clean test run
+.PHONY: help build clean test run build-and-test
 
 .DEFAULT: help
 
@@ -20,9 +20,11 @@ clean:
 build:
 	docker-compose build
 
-test: clean
+run-test:
 	docker-compose build test
 	docker-compose up --exit-code-from test
+
+test: clean run-test clean
 
 run: clean build
 	docker-compose spq
