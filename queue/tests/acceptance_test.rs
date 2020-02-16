@@ -38,6 +38,7 @@ fn peek_must_not_alter_contents() {
 
     assert_eq!(queue.peek(), expected_element);
     assert_eq!(queue.peek(), expected_element);
+    assert_eq!(queue.size(), 2);
 }
 
 #[test]
