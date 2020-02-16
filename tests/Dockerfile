@@ -7,12 +7,16 @@ COPY tests/requirements-test.txt /app/requirements-test.txt
 RUN pip install --upgrade pip
 RUN pip install -r requirements-test.txt
 
-RUN mkdir /app/reports
+COPY server/proto/spq.proto /app/tests/proto/spq.proto
+COPY tests/integration_tests/proto/ /app/tests/proto/
+
+RUN cd /app/tests/ && \
+  python3 -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=. proto/spq.proto
+RUN ls -alF /app/tests/proto/
 
 COPY tests/integration_tests/ /app/tests/
 COPY tests/entrypoint.sh /app/entrypoint.sh
 
-RUN touch /app/tests/proto/__init__.py
 RUN touch /app/tests/__init__.py
 
 RUN chmod +x /app/entrypoint.sh

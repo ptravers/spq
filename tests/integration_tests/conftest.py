@@ -1,6 +1,6 @@
 import pytest
 import grpc
-from proto import spq_pb2_grpc, spq_pb2
+from proto import spq_pb2_grpc
 
 
 @pytest.fixture(scope="session")
