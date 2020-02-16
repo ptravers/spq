@@ -5,7 +5,7 @@ from proto import spq_pb2_grpc, spq_pb2
 
 @pytest.fixture(scope="session")
 def channel():
-    return grpc.insecure_channel('spq:9090')
+    return grpc.insecure_channel("spq:9090")
 
 
 @pytest.fixture(scope="session")

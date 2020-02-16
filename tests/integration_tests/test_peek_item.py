@@ -1,11 +1,11 @@
 from proto import spq_pb2
 
+
 def test_peek_item(spq_client):
-    sent_item = bytes("peek_item", 'utf-8')
+    sent_item = bytes("peek_item", "utf-8")
     request = spq_pb2.AddItemRequest(
-            item=sent_item,
-            features=[{"name":"feature_name", "value":0}]
-            )
+        item=sent_item, features=[{"name": "feature_name", "value": 0}]
+    )
     add_item_result = spq_client.AddItem(request)
 
     peek_item_result = spq_client.PeekNextItem(spq_pb2.PeekItemRequest())
@@ -17,9 +17,8 @@ def test_peek_item(spq_client):
 
 def test_peek_item_does_not_alter_queue(spq_client):
     request = spq_pb2.AddItemRequest(
-            item=bytes("item", 'utf-8'),
-            features=[{"name":"feature_name", "value":0}]
-            )
+        item=bytes("item", "utf-8"), features=[{"name": "feature_name", "value": 0}]
+    )
     spq_client.AddItem(request)
 
     peek_item_result = spq_client.PeekNextItem(spq_pb2.PeekItemRequest())

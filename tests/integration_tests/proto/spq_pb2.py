@@ -3,540 +3,668 @@
 # source: proto/spq.proto
 
 import sys
-_b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
+
+_b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-
-
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='proto/spq.proto',
-  package='spq_generated',
-  syntax='proto3',
-  serialized_options=None,
-  serialized_pb=_b('\n\x0fproto/spq.proto\x12\rspq_generated\"\x7f\n\x0e\x41\x64\x64ItemRequest\x12\x0c\n\x04item\x18\x01 \x01(\x0c\x12\x37\n\x08\x66\x65\x61tures\x18\x02 \x03(\x0b\x32%.spq_generated.AddItemRequest.feature\x1a&\n\x07\x66\x65\x61ture\x12\r\n\x05value\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x1f\n\x0f\x41\x64\x64ItemResponse\x12\x0c\n\x04size\x18\x01 \x01(\x03\"\x10\n\x0eGetSizeRequest\"\x1f\n\x0fGetSizeResponse\x12\x0c\n\x04size\x18\x01 \x01(\x03\"\x11\n\x0fPeekItemRequest\"\x10\n\x0eGetItemRequest\";\n\x0cItemResponse\x12\x0c\n\x04item\x18\x01 \x01(\x0c\x12\x0f\n\x07hasItem\x18\x02 \x01(\x08\x12\x0c\n\x04size\x18\x03 \x01(\x03\"%\n\x12HealthCheckRequest\x12\x0f\n\x07service\x18\x01 \x01(\t\"\x93\x01\n\x13HealthCheckResponse\x12@\n\x06status\x18\x01 \x01(\x0e\x32\x30.spq_generated.HealthCheckResponse.ServingStatus\":\n\rServingStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07SERVING\x10\x01\x12\x0f\n\x0bNOT_SERVING\x10\x02\x32\xd1\x02\n\x1bSortingPriorityQueueService\x12K\n\x0bGetNextItem\x12\x1d.spq_generated.GetItemRequest\x1a\x1b.spq_generated.ItemResponse\"\x00\x12M\n\x0cPeekNextItem\x12\x1e.spq_generated.PeekItemRequest\x1a\x1b.spq_generated.ItemResponse\"\x00\x12J\n\x07GetSize\x12\x1d.spq_generated.GetSizeRequest\x1a\x1e.spq_generated.GetSizeResponse\"\x00\x12J\n\x07\x41\x64\x64Item\x12\x1d.spq_generated.AddItemRequest\x1a\x1e.spq_generated.AddItemResponse\"\x00\x32\xb1\x01\n\rHealthService\x12N\n\x05\x43heck\x12!.spq_generated.HealthCheckRequest\x1a\".spq_generated.HealthCheckResponse\x12P\n\x05Watch\x12!.spq_generated.HealthCheckRequest\x1a\".spq_generated.HealthCheckResponse0\x01\x62\x06proto3')
+    name="proto/spq.proto",
+    package="spq_generated",
+    syntax="proto3",
+    serialized_options=None,
+    serialized_pb=_b(
+        '\n\x0fproto/spq.proto\x12\rspq_generated"\x7f\n\x0e\x41\x64\x64ItemRequest\x12\x0c\n\x04item\x18\x01 \x01(\x0c\x12\x37\n\x08\x66\x65\x61tures\x18\x02 \x03(\x0b\x32%.spq_generated.AddItemRequest.feature\x1a&\n\x07\x66\x65\x61ture\x12\r\n\x05value\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t"\x1f\n\x0f\x41\x64\x64ItemResponse\x12\x0c\n\x04size\x18\x01 \x01(\x03"\x10\n\x0eGetSizeRequest"\x1f\n\x0fGetSizeResponse\x12\x0c\n\x04size\x18\x01 \x01(\x03"\x11\n\x0fPeekItemRequest"\x10\n\x0eGetItemRequest";\n\x0cItemResponse\x12\x0c\n\x04item\x18\x01 \x01(\x0c\x12\x0f\n\x07hasItem\x18\x02 \x01(\x08\x12\x0c\n\x04size\x18\x03 \x01(\x03"%\n\x12HealthCheckRequest\x12\x0f\n\x07service\x18\x01 \x01(\t"\x93\x01\n\x13HealthCheckResponse\x12@\n\x06status\x18\x01 \x01(\x0e\x32\x30.spq_generated.HealthCheckResponse.ServingStatus":\n\rServingStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07SERVING\x10\x01\x12\x0f\n\x0bNOT_SERVING\x10\x02\x32\xd1\x02\n\x1bSortingPriorityQueueService\x12K\n\x0bGetNextItem\x12\x1d.spq_generated.GetItemRequest\x1a\x1b.spq_generated.ItemResponse"\x00\x12M\n\x0cPeekNextItem\x12\x1e.spq_generated.PeekItemRequest\x1a\x1b.spq_generated.ItemResponse"\x00\x12J\n\x07GetSize\x12\x1d.spq_generated.GetSizeRequest\x1a\x1e.spq_generated.GetSizeResponse"\x00\x12J\n\x07\x41\x64\x64Item\x12\x1d.spq_generated.AddItemRequest\x1a\x1e.spq_generated.AddItemResponse"\x00\x32\xb1\x01\n\rHealthService\x12N\n\x05\x43heck\x12!.spq_generated.HealthCheckRequest\x1a".spq_generated.HealthCheckResponse\x12P\n\x05Watch\x12!.spq_generated.HealthCheckRequest\x1a".spq_generated.HealthCheckResponse0\x01\x62\x06proto3'
+    ),
 )
 
 
-
 _HEALTHCHECKRESPONSE_SERVINGSTATUS = _descriptor.EnumDescriptor(
-  name='ServingStatus',
-  full_name='spq_generated.HealthCheckResponse.ServingStatus',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='UNKNOWN', index=0, number=0,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='SERVING', index=1, number=1,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='NOT_SERVING', index=2, number=2,
-      serialized_options=None,
-      type=None),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=474,
-  serialized_end=532,
+    name="ServingStatus",
+    full_name="spq_generated.HealthCheckResponse.ServingStatus",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="UNKNOWN", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="SERVING", index=1, number=1, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="NOT_SERVING", index=2, number=2, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=474,
+    serialized_end=532,
 )
 _sym_db.RegisterEnumDescriptor(_HEALTHCHECKRESPONSE_SERVINGSTATUS)
 
 
 _ADDITEMREQUEST_FEATURE = _descriptor.Descriptor(
-  name='feature',
-  full_name='spq_generated.AddItemRequest.feature',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='value', full_name='spq_generated.AddItemRequest.feature.value', index=0,
-      number=1, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='name', full_name='spq_generated.AddItemRequest.feature.name', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=123,
-  serialized_end=161,
+    name="feature",
+    full_name="spq_generated.AddItemRequest.feature",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="value",
+            full_name="spq_generated.AddItemRequest.feature.value",
+            index=0,
+            number=1,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="name",
+            full_name="spq_generated.AddItemRequest.feature.name",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=123,
+    serialized_end=161,
 )
 
 _ADDITEMREQUEST = _descriptor.Descriptor(
-  name='AddItemRequest',
-  full_name='spq_generated.AddItemRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='item', full_name='spq_generated.AddItemRequest.item', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='features', full_name='spq_generated.AddItemRequest.features', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[_ADDITEMREQUEST_FEATURE, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=34,
-  serialized_end=161,
+    name="AddItemRequest",
+    full_name="spq_generated.AddItemRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="item",
+            full_name="spq_generated.AddItemRequest.item",
+            index=0,
+            number=1,
+            type=12,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b(""),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="features",
+            full_name="spq_generated.AddItemRequest.features",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[_ADDITEMREQUEST_FEATURE],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=34,
+    serialized_end=161,
 )
 
 
 _ADDITEMRESPONSE = _descriptor.Descriptor(
-  name='AddItemResponse',
-  full_name='spq_generated.AddItemResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='size', full_name='spq_generated.AddItemResponse.size', index=0,
-      number=1, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=163,
-  serialized_end=194,
+    name="AddItemResponse",
+    full_name="spq_generated.AddItemResponse",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="size",
+            full_name="spq_generated.AddItemResponse.size",
+            index=0,
+            number=1,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=163,
+    serialized_end=194,
 )
 
 
 _GETSIZEREQUEST = _descriptor.Descriptor(
-  name='GetSizeRequest',
-  full_name='spq_generated.GetSizeRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=196,
-  serialized_end=212,
+    name="GetSizeRequest",
+    full_name="spq_generated.GetSizeRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=196,
+    serialized_end=212,
 )
 
 
 _GETSIZERESPONSE = _descriptor.Descriptor(
-  name='GetSizeResponse',
-  full_name='spq_generated.GetSizeResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='size', full_name='spq_generated.GetSizeResponse.size', index=0,
-      number=1, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=214,
-  serialized_end=245,
+    name="GetSizeResponse",
+    full_name="spq_generated.GetSizeResponse",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="size",
+            full_name="spq_generated.GetSizeResponse.size",
+            index=0,
+            number=1,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=214,
+    serialized_end=245,
 )
 
 
 _PEEKITEMREQUEST = _descriptor.Descriptor(
-  name='PeekItemRequest',
-  full_name='spq_generated.PeekItemRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=247,
-  serialized_end=264,
+    name="PeekItemRequest",
+    full_name="spq_generated.PeekItemRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=247,
+    serialized_end=264,
 )
 
 
 _GETITEMREQUEST = _descriptor.Descriptor(
-  name='GetItemRequest',
-  full_name='spq_generated.GetItemRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=266,
-  serialized_end=282,
+    name="GetItemRequest",
+    full_name="spq_generated.GetItemRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=266,
+    serialized_end=282,
 )
 
 
 _ITEMRESPONSE = _descriptor.Descriptor(
-  name='ItemResponse',
-  full_name='spq_generated.ItemResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='item', full_name='spq_generated.ItemResponse.item', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='hasItem', full_name='spq_generated.ItemResponse.hasItem', index=1,
-      number=2, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='size', full_name='spq_generated.ItemResponse.size', index=2,
-      number=3, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=284,
-  serialized_end=343,
+    name="ItemResponse",
+    full_name="spq_generated.ItemResponse",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="item",
+            full_name="spq_generated.ItemResponse.item",
+            index=0,
+            number=1,
+            type=12,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b(""),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="hasItem",
+            full_name="spq_generated.ItemResponse.hasItem",
+            index=1,
+            number=2,
+            type=8,
+            cpp_type=7,
+            label=1,
+            has_default_value=False,
+            default_value=False,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="size",
+            full_name="spq_generated.ItemResponse.size",
+            index=2,
+            number=3,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=284,
+    serialized_end=343,
 )
 
 
 _HEALTHCHECKREQUEST = _descriptor.Descriptor(
-  name='HealthCheckRequest',
-  full_name='spq_generated.HealthCheckRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='service', full_name='spq_generated.HealthCheckRequest.service', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=345,
-  serialized_end=382,
+    name="HealthCheckRequest",
+    full_name="spq_generated.HealthCheckRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="service",
+            full_name="spq_generated.HealthCheckRequest.service",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=345,
+    serialized_end=382,
 )
 
 
 _HEALTHCHECKRESPONSE = _descriptor.Descriptor(
-  name='HealthCheckResponse',
-  full_name='spq_generated.HealthCheckResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='status', full_name='spq_generated.HealthCheckResponse.status', index=0,
-      number=1, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-    _HEALTHCHECKRESPONSE_SERVINGSTATUS,
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=385,
-  serialized_end=532,
+    name="HealthCheckResponse",
+    full_name="spq_generated.HealthCheckResponse",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="status",
+            full_name="spq_generated.HealthCheckResponse.status",
+            index=0,
+            number=1,
+            type=14,
+            cpp_type=8,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[_HEALTHCHECKRESPONSE_SERVINGSTATUS],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=385,
+    serialized_end=532,
 )
 
 _ADDITEMREQUEST_FEATURE.containing_type = _ADDITEMREQUEST
-_ADDITEMREQUEST.fields_by_name['features'].message_type = _ADDITEMREQUEST_FEATURE
-_HEALTHCHECKRESPONSE.fields_by_name['status'].enum_type = _HEALTHCHECKRESPONSE_SERVINGSTATUS
+_ADDITEMREQUEST.fields_by_name["features"].message_type = _ADDITEMREQUEST_FEATURE
+_HEALTHCHECKRESPONSE.fields_by_name[
+    "status"
+].enum_type = _HEALTHCHECKRESPONSE_SERVINGSTATUS
 _HEALTHCHECKRESPONSE_SERVINGSTATUS.containing_type = _HEALTHCHECKRESPONSE
-DESCRIPTOR.message_types_by_name['AddItemRequest'] = _ADDITEMREQUEST
-DESCRIPTOR.message_types_by_name['AddItemResponse'] = _ADDITEMRESPONSE
-DESCRIPTOR.message_types_by_name['GetSizeRequest'] = _GETSIZEREQUEST
-DESCRIPTOR.message_types_by_name['GetSizeResponse'] = _GETSIZERESPONSE
-DESCRIPTOR.message_types_by_name['PeekItemRequest'] = _PEEKITEMREQUEST
-DESCRIPTOR.message_types_by_name['GetItemRequest'] = _GETITEMREQUEST
-DESCRIPTOR.message_types_by_name['ItemResponse'] = _ITEMRESPONSE
-DESCRIPTOR.message_types_by_name['HealthCheckRequest'] = _HEALTHCHECKREQUEST
-DESCRIPTOR.message_types_by_name['HealthCheckResponse'] = _HEALTHCHECKRESPONSE
+DESCRIPTOR.message_types_by_name["AddItemRequest"] = _ADDITEMREQUEST
+DESCRIPTOR.message_types_by_name["AddItemResponse"] = _ADDITEMRESPONSE
+DESCRIPTOR.message_types_by_name["GetSizeRequest"] = _GETSIZEREQUEST
+DESCRIPTOR.message_types_by_name["GetSizeResponse"] = _GETSIZERESPONSE
+DESCRIPTOR.message_types_by_name["PeekItemRequest"] = _PEEKITEMREQUEST
+DESCRIPTOR.message_types_by_name["GetItemRequest"] = _GETITEMREQUEST
+DESCRIPTOR.message_types_by_name["ItemResponse"] = _ITEMRESPONSE
+DESCRIPTOR.message_types_by_name["HealthCheckRequest"] = _HEALTHCHECKREQUEST
+DESCRIPTOR.message_types_by_name["HealthCheckResponse"] = _HEALTHCHECKRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-AddItemRequest = _reflection.GeneratedProtocolMessageType('AddItemRequest', (_message.Message,), {
-
-  'feature' : _reflection.GeneratedProtocolMessageType('feature', (_message.Message,), {
-    'DESCRIPTOR' : _ADDITEMREQUEST_FEATURE,
-    '__module__' : 'proto.spq_pb2'
-    # @@protoc_insertion_point(class_scope:spq_generated.AddItemRequest.feature)
-    })
-  ,
-  'DESCRIPTOR' : _ADDITEMREQUEST,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.AddItemRequest)
-  })
+AddItemRequest = _reflection.GeneratedProtocolMessageType(
+    "AddItemRequest",
+    (_message.Message,),
+    {
+        "feature": _reflection.GeneratedProtocolMessageType(
+            "feature",
+            (_message.Message,),
+            {
+                "DESCRIPTOR": _ADDITEMREQUEST_FEATURE,
+                "__module__": "proto.spq_pb2"
+                # @@protoc_insertion_point(class_scope:spq_generated.AddItemRequest.feature)
+            },
+        ),
+        "DESCRIPTOR": _ADDITEMREQUEST,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.AddItemRequest)
+    },
+)
 _sym_db.RegisterMessage(AddItemRequest)
 _sym_db.RegisterMessage(AddItemRequest.feature)
 
-AddItemResponse = _reflection.GeneratedProtocolMessageType('AddItemResponse', (_message.Message,), {
-  'DESCRIPTOR' : _ADDITEMRESPONSE,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.AddItemResponse)
-  })
+AddItemResponse = _reflection.GeneratedProtocolMessageType(
+    "AddItemResponse",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _ADDITEMRESPONSE,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.AddItemResponse)
+    },
+)
 _sym_db.RegisterMessage(AddItemResponse)
 
-GetSizeRequest = _reflection.GeneratedProtocolMessageType('GetSizeRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETSIZEREQUEST,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.GetSizeRequest)
-  })
+GetSizeRequest = _reflection.GeneratedProtocolMessageType(
+    "GetSizeRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _GETSIZEREQUEST,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.GetSizeRequest)
+    },
+)
 _sym_db.RegisterMessage(GetSizeRequest)
 
-GetSizeResponse = _reflection.GeneratedProtocolMessageType('GetSizeResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETSIZERESPONSE,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.GetSizeResponse)
-  })
+GetSizeResponse = _reflection.GeneratedProtocolMessageType(
+    "GetSizeResponse",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _GETSIZERESPONSE,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.GetSizeResponse)
+    },
+)
 _sym_db.RegisterMessage(GetSizeResponse)
 
-PeekItemRequest = _reflection.GeneratedProtocolMessageType('PeekItemRequest', (_message.Message,), {
-  'DESCRIPTOR' : _PEEKITEMREQUEST,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.PeekItemRequest)
-  })
+PeekItemRequest = _reflection.GeneratedProtocolMessageType(
+    "PeekItemRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _PEEKITEMREQUEST,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.PeekItemRequest)
+    },
+)
 _sym_db.RegisterMessage(PeekItemRequest)
 
-GetItemRequest = _reflection.GeneratedProtocolMessageType('GetItemRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETITEMREQUEST,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.GetItemRequest)
-  })
+GetItemRequest = _reflection.GeneratedProtocolMessageType(
+    "GetItemRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _GETITEMREQUEST,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.GetItemRequest)
+    },
+)
 _sym_db.RegisterMessage(GetItemRequest)
 
-ItemResponse = _reflection.GeneratedProtocolMessageType('ItemResponse', (_message.Message,), {
-  'DESCRIPTOR' : _ITEMRESPONSE,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.ItemResponse)
-  })
+ItemResponse = _reflection.GeneratedProtocolMessageType(
+    "ItemResponse",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _ITEMRESPONSE,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.ItemResponse)
+    },
+)
 _sym_db.RegisterMessage(ItemResponse)
 
-HealthCheckRequest = _reflection.GeneratedProtocolMessageType('HealthCheckRequest', (_message.Message,), {
-  'DESCRIPTOR' : _HEALTHCHECKREQUEST,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.HealthCheckRequest)
-  })
+HealthCheckRequest = _reflection.GeneratedProtocolMessageType(
+    "HealthCheckRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _HEALTHCHECKREQUEST,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.HealthCheckRequest)
+    },
+)
 _sym_db.RegisterMessage(HealthCheckRequest)
 
-HealthCheckResponse = _reflection.GeneratedProtocolMessageType('HealthCheckResponse', (_message.Message,), {
-  'DESCRIPTOR' : _HEALTHCHECKRESPONSE,
-  '__module__' : 'proto.spq_pb2'
-  # @@protoc_insertion_point(class_scope:spq_generated.HealthCheckResponse)
-  })
+HealthCheckResponse = _reflection.GeneratedProtocolMessageType(
+    "HealthCheckResponse",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _HEALTHCHECKRESPONSE,
+        "__module__": "proto.spq_pb2"
+        # @@protoc_insertion_point(class_scope:spq_generated.HealthCheckResponse)
+    },
+)
 _sym_db.RegisterMessage(HealthCheckResponse)
 
 
-
 _SORTINGPRIORITYQUEUESERVICE = _descriptor.ServiceDescriptor(
-  name='SortingPriorityQueueService',
-  full_name='spq_generated.SortingPriorityQueueService',
-  file=DESCRIPTOR,
-  index=0,
-  serialized_options=None,
-  serialized_start=535,
-  serialized_end=872,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='GetNextItem',
-    full_name='spq_generated.SortingPriorityQueueService.GetNextItem',
+    name="SortingPriorityQueueService",
+    full_name="spq_generated.SortingPriorityQueueService",
+    file=DESCRIPTOR,
     index=0,
-    containing_service=None,
-    input_type=_GETITEMREQUEST,
-    output_type=_ITEMRESPONSE,
     serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='PeekNextItem',
-    full_name='spq_generated.SortingPriorityQueueService.PeekNextItem',
-    index=1,
-    containing_service=None,
-    input_type=_PEEKITEMREQUEST,
-    output_type=_ITEMRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='GetSize',
-    full_name='spq_generated.SortingPriorityQueueService.GetSize',
-    index=2,
-    containing_service=None,
-    input_type=_GETSIZEREQUEST,
-    output_type=_GETSIZERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='AddItem',
-    full_name='spq_generated.SortingPriorityQueueService.AddItem',
-    index=3,
-    containing_service=None,
-    input_type=_ADDITEMREQUEST,
-    output_type=_ADDITEMRESPONSE,
-    serialized_options=None,
-  ),
-])
+    serialized_start=535,
+    serialized_end=872,
+    methods=[
+        _descriptor.MethodDescriptor(
+            name="GetNextItem",
+            full_name="spq_generated.SortingPriorityQueueService.GetNextItem",
+            index=0,
+            containing_service=None,
+            input_type=_GETITEMREQUEST,
+            output_type=_ITEMRESPONSE,
+            serialized_options=None,
+        ),
+        _descriptor.MethodDescriptor(
+            name="PeekNextItem",
+            full_name="spq_generated.SortingPriorityQueueService.PeekNextItem",
+            index=1,
+            containing_service=None,
+            input_type=_PEEKITEMREQUEST,
+            output_type=_ITEMRESPONSE,
+            serialized_options=None,
+        ),
+        _descriptor.MethodDescriptor(
+            name="GetSize",
+            full_name="spq_generated.SortingPriorityQueueService.GetSize",
+            index=2,
+            containing_service=None,
+            input_type=_GETSIZEREQUEST,
+            output_type=_GETSIZERESPONSE,
+            serialized_options=None,
+        ),
+        _descriptor.MethodDescriptor(
+            name="AddItem",
+            full_name="spq_generated.SortingPriorityQueueService.AddItem",
+            index=3,
+            containing_service=None,
+            input_type=_ADDITEMREQUEST,
+            output_type=_ADDITEMRESPONSE,
+            serialized_options=None,
+        ),
+    ],
+)
 _sym_db.RegisterServiceDescriptor(_SORTINGPRIORITYQUEUESERVICE)
 
-DESCRIPTOR.services_by_name['SortingPriorityQueueService'] = _SORTINGPRIORITYQUEUESERVICE
+DESCRIPTOR.services_by_name[
+    "SortingPriorityQueueService"
+] = _SORTINGPRIORITYQUEUESERVICE
 
 
 _HEALTHSERVICE = _descriptor.ServiceDescriptor(
-  name='HealthService',
-  full_name='spq_generated.HealthService',
-  file=DESCRIPTOR,
-  index=1,
-  serialized_options=None,
-  serialized_start=875,
-  serialized_end=1052,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='Check',
-    full_name='spq_generated.HealthService.Check',
-    index=0,
-    containing_service=None,
-    input_type=_HEALTHCHECKREQUEST,
-    output_type=_HEALTHCHECKRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='Watch',
-    full_name='spq_generated.HealthService.Watch',
+    name="HealthService",
+    full_name="spq_generated.HealthService",
+    file=DESCRIPTOR,
     index=1,
-    containing_service=None,
-    input_type=_HEALTHCHECKREQUEST,
-    output_type=_HEALTHCHECKRESPONSE,
     serialized_options=None,
-  ),
-])
+    serialized_start=875,
+    serialized_end=1052,
+    methods=[
+        _descriptor.MethodDescriptor(
+            name="Check",
+            full_name="spq_generated.HealthService.Check",
+            index=0,
+            containing_service=None,
+            input_type=_HEALTHCHECKREQUEST,
+            output_type=_HEALTHCHECKRESPONSE,
+            serialized_options=None,
+        ),
+        _descriptor.MethodDescriptor(
+            name="Watch",
+            full_name="spq_generated.HealthService.Watch",
+            index=1,
+            containing_service=None,
+            input_type=_HEALTHCHECKREQUEST,
+            output_type=_HEALTHCHECKRESPONSE,
+            serialized_options=None,
+        ),
+    ],
+)
 _sym_db.RegisterServiceDescriptor(_HEALTHSERVICE)
 
-DESCRIPTOR.services_by_name['HealthService'] = _HEALTHSERVICE
+DESCRIPTOR.services_by_name["HealthService"] = _HEALTHSERVICE
 
 # @@protoc_insertion_point(module_scope)

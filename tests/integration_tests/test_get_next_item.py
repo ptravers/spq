@@ -2,12 +2,11 @@ from proto import spq_pb2
 
 
 def test_get_next_item(spq_client):
-    sent_item = bytes("item", 'utf-8')
+    sent_item = bytes("item", "utf-8")
 
     request = spq_pb2.AddItemRequest(
-            item=sent_item,
-            features=[{"name":"feature_name", "value":0}]
-            )
+        item=sent_item, features=[{"name": "feature_name", "value": 0}]
+    )
 
     add_item_result = spq_client.AddItem(request)
 
