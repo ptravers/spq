@@ -1,0 +1,35 @@
+version: "3.5"
+
+services:
+  test:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+    image: spq-tests:latest
+    command: [
+      "./entrypoint.sh",
+      "pytest -p no:warnings /app/tests/"
+    ]
+    depends_on:
+      - spq
+    networks:
+      - default
+    container_name: spq-test
+  spq:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: spq:latest
+    ports:
+      - 9090:9090
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/grpc_health_probe -addr=[::0]:9090 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+    container_name: spq
+networks:
+  default:
+    name: end-to-end-tests-${COMMIT_HASH}

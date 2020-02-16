@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package spq_generated;
+
+service SortingPriorityQueueService {
+  rpc GetNextItem(GetItemRequest) returns (ItemResponse) {}
+  rpc PeekNextItem(PeekItemRequest) returns (ItemResponse) {}
+  rpc GetSize(GetSizeRequest) returns (GetSizeResponse) {}
+  rpc AddItem(AddItemRequest) returns (AddItemResponse) {}
+}
+
+message AddItemRequest {
+  message feature {
+    int64 value = 1;
+    string name = 2;
+  }
+  bytes item = 1;
+  repeated feature features = 2;
+}
+
+message AddItemResponse {
+  int64 size = 1;
+}
+
+message GetSizeRequest {
+}
+
+message GetSizeResponse {
+  int64 size = 1;
+}
+
+message PeekItemRequest {
+}
+
+message GetItemRequest {
+}
+
+message ItemResponse {
+  bytes item = 1;
+  bool hasItem = 2;
+  int64 size = 3;
+}
+
+service HealthService {
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+
+  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
+}
+
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+  }
+  ServingStatus status = 1;
+}
