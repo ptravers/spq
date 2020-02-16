@@ -41,6 +41,18 @@ fn peek_must_not_alter_contents() {
 }
 
 #[test]
+fn must_decrease_size_when_items_are_removed() {
+    let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
+
+    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.next();
+    queue.next();
+
+    assert_eq!(queue.size(), 0);
+}
+
+#[test]
 fn must_increase_size_when_items_are_added() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 

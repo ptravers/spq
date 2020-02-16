@@ -206,6 +206,7 @@ impl FeatureSpace {
 
                     if next_feature_node_value.is_some() {
                         self.step = next_step;
+                        self.total_items -= 1;
                     }
 
                     return next_feature_node_value.map(|node_value| node_value.child_index);
