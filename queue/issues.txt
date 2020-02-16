@@ -1,3 +1,6 @@
+NB I keep this here rather than in GitHub issues because I work without internat on the
+train
+
 - Add returning element as a lease (?)
 - Refactor handle proper error cases where no element is present where it is expected to be
 - Refactor step to a better clearer name
