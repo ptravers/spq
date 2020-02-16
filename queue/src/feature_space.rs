@@ -201,8 +201,8 @@ impl FeatureSpace {
         for feature_space_layer in 0..self.dimension {
             match self.feature_tree.get_mut(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
-                    let next_feature_node_value =
-                        feature_node.peek_and_update(&next_epoch_step, &mut self.feature_value_to_epoch_step);
+                    let next_feature_node_value = feature_node
+                        .peek_and_update(&next_epoch_step, &mut self.feature_value_to_epoch_step);
 
                     if next_feature_node_value.is_some() {
                         self.epoch_step = next_epoch_step;
@@ -212,8 +212,8 @@ impl FeatureSpace {
                     return next_feature_node_value.map(|node_value| node_value.child_index);
                 }
                 Some(feature_node) => {
-                    let next_feature_node_value =
-                        feature_node.peek_and_update(&next_epoch_step, &mut self.feature_value_to_epoch_step);
+                    let next_feature_node_value = feature_node
+                        .peek_and_update(&next_epoch_step, &mut self.feature_value_to_epoch_step);
 
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
@@ -271,7 +271,8 @@ impl FeatureSpace {
                             values.push(value.clone());
 
                             if !self.feature_value_to_epoch_step.contains_key(&value.hash) {
-                                self.feature_value_to_epoch_step.insert(value.hash, self.epoch_step);
+                                self.feature_value_to_epoch_step
+                                    .insert(value.hash, self.epoch_step);
                             }
                         }
                     }
@@ -284,7 +285,8 @@ impl FeatureSpace {
                     values.push(value.clone());
 
                     if !self.feature_value_to_epoch_step.contains_key(&value.hash) {
-                        self.feature_value_to_epoch_step.insert(value.hash, self.epoch_step);
+                        self.feature_value_to_epoch_step
+                            .insert(value.hash, self.epoch_step);
                     }
 
                     self.feature_tree.insert(

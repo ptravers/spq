@@ -7,7 +7,7 @@ use feature_space::{create_hash, FeatureSpace, FeatureValue};
 
 #[allow(dead_code)]
 pub struct SortingPriorityQueue<T: Clone + Ord> {
-    step: usize,
+    epoch_step: usize,
     feature_space: FeatureSpace,
     items: HashMap<u64, BinaryHeap<T>>,
 }
@@ -16,7 +16,7 @@ pub struct SortingPriorityQueue<T: Clone + Ord> {
 impl<T: Clone + Ord> SortingPriorityQueue<T> {
     pub fn new(feature_space: Vec<String>) -> SortingPriorityQueue<T> {
         SortingPriorityQueue {
-            step: 0,
+            epoch_step: 0,
             feature_space: FeatureSpace::new(0, feature_space),
             items: HashMap::new(),
         }
@@ -47,7 +47,7 @@ impl<T: Clone + Ord> SortingPriorityQueue<T> {
                     })
                     .push(item);
 
-                self.feature_space.step()
+                self.feature_space.epoch_step()
             });
         }
     }
@@ -79,6 +79,6 @@ impl<T: Clone + Ord> SortingPriorityQueue<T> {
             None => {}
         }
 
-        return (next_item, self.feature_space.step());
+        return (next_item, self.feature_space.epoch_step());
     }
 }
