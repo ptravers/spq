@@ -8,7 +8,7 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.3.1 && \
 COPY . /app/
 
 WORKDIR /app/server
-RUN rustup component add rustfmt --toolchain 1.40.0-x86_64-unknown-linux-gnu && \
+RUN rustup component add rustfmt && \
     cargo fetch
 
 RUN cargo build --release
