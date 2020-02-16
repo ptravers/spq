@@ -1,10 +1,8 @@
 NB I keep this here rather than in GitHub issues because I work without internat on the
 train
 
+HIGH:
 - Add returning element as a lease (?)
-- Refactor handle proper error cases where no element is present where it is expected to be
-- Refactor step to a better clearer name
-- Add network layer
 - Add replication layer
 - Add cluster discovery
 - Add memoization in network layer
@@ -15,3 +13,7 @@ train
 - Add monitoring status of callback so must be notified that callback is available to be called again (?)
 - Add notion of quotas when callbacks are tracked ie knowledge of usage completion (?)
 - Add benchmark tests for queue and server
+
+LOW:
+- Use directory discovery in top level makefile
+- Improve CI speed
