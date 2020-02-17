@@ -1,6 +1,8 @@
 # spq
 Sorting Priority Queue
 
+https://github.com/ptravers/spq/workflows/CI/badge.sv
+
 SPQ provides a Priority Queue that ensures an even distribution of elements over a herirarchical feature space.
 
 e.g.
