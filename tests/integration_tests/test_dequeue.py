@@ -1,16 +1,16 @@
 from proto import spq_pb2
 
 
-def test_get_next_item(spq_client):
+def test_dequeue(spq_client):
     sent_item = bytes("item", "utf-8")
 
-    request = spq_pb2.AddItemRequest(
+    request = spq_pb2.EnqueueRequest(
         item=sent_item, features=[{"name": "feature_name", "value": 0}]
     )
 
-    add_item_result = spq_client.AddItem(request)
+    add_item_result = spq_client.Enqueue(request)
 
-    result = spq_client.GetNextItem(spq_pb2.GetItemRequest())
+    result = spq_client.Dequeue(spq_pb2.DequeueRequest())
 
     assert result.hasItem == True
     assert result.item == sent_item

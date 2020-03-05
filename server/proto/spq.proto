@@ -3,13 +3,13 @@ syntax = "proto3";
 package spq_generated;
 
 service SortingPriorityQueueService {
-  rpc GetNextItem(GetItemRequest) returns (ItemResponse) {}
+  rpc Dequeue(DequeueRequest) returns (ItemResponse) {}
   rpc PeekNextItem(PeekItemRequest) returns (ItemResponse) {}
   rpc GetSize(GetSizeRequest) returns (GetSizeResponse) {}
-  rpc AddItem(AddItemRequest) returns (AddItemResponse) {}
+  rpc Enqueue(EnqueueRequest) returns (EnqueueResponse) {}
 }
 
-message AddItemRequest {
+message EnqueueRequest {
   message feature {
     int64 value = 1;
     string name = 2;
@@ -18,7 +18,7 @@ message AddItemRequest {
   repeated feature features = 2;
 }
 
-message AddItemResponse {
+message EnqueueResponse {
   int64 size = 1;
 }
 
@@ -32,7 +32,7 @@ message GetSizeResponse {
 message PeekItemRequest {
 }
 
-message GetItemRequest {
+message DequeueRequest {
 }
 
 message ItemResponse {

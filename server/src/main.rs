@@ -9,14 +9,14 @@ mod spq_generated {
 }
 use sp_queue::feature_space::FeatureValue;
 use sp_queue::SortingPriorityQueue;
-use spq_generated::add_item_request::Feature;
+use spq_generated::enqueue_request::Feature;
 use spq_generated::health_check_response::ServingStatus;
 use spq_generated::health_service_server::{HealthService, HealthServiceServer};
 use spq_generated::sorting_priority_queue_service_server::{
     SortingPriorityQueueService, SortingPriorityQueueServiceServer,
 };
 use spq_generated::{
-    AddItemRequest, AddItemResponse, GetItemRequest, GetSizeRequest, GetSizeResponse,
+    DequeueRequest, EnqueueRequest, EnqueueResponse, GetSizeRequest, GetSizeResponse,
     HealthCheckRequest, HealthCheckResponse, ItemResponse, PeekItemRequest,
 };
 use std::sync::{Arc, RwLock};
@@ -31,11 +31,11 @@ fn to_feature_value(feature: Feature) -> FeatureValue {
 
 #[tonic::async_trait]
 impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
-    async fn add_item(
+    async fn enqueue(
         &self,
-        _request: Request<AddItemRequest>,
-    ) -> Result<Response<AddItemResponse>, Status> {
-        return self
+        _request: Request<EnqueueRequest>,
+    ) -> Result<Response<EnqueueResponse>, Status> {
+        self
             .queue
             .try_write()
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
@@ -43,7 +43,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
                 let add_item_request = _request.get_ref();
                 let size = queue.size();
                 queue
-                    .add(
+                    .enqueue(
                         add_item_request.item.clone(),
                         add_item_request
                             .features
@@ -55,62 +55,62 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
                     .map(|_| size + 1)
                     .map_err(|err| Status::new(Code::Internal, err))
             })
-            .map(|size| Response::new(AddItemResponse { size: size as i64 }));
+            .map(|size| Response::new(EnqueueResponse { size: size as i64 }))
     }
 
-    async fn get_next_item(
+    async fn dequeue(
         &self,
-        _request: Request<GetItemRequest>,
+        _request: Request<DequeueRequest>,
     ) -> Result<Response<ItemResponse>, Status> {
-        return self
+        self
             .queue
             .try_write()
             .map(|mut queue| {
-                let (maybe_next, _) = queue.next();
+                let (maybe_next, _) = queue.dequeue();
                 let size = queue.size();
 
-                return Response::new(ItemResponse {
+                Response::new(ItemResponse {
                     has_item: maybe_next.is_some(),
-                    item: maybe_next.unwrap_or(vec![]),
+                    item: maybe_next.unwrap_or_else(|| vec![]),
                     size: size as i64,
-                });
+                })
             })
-            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"));
+            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
     }
 
     async fn peek_next_item(
         &self,
         _request: Request<PeekItemRequest>,
     ) -> Result<Response<ItemResponse>, Status> {
-        return self
+        self
             .queue
             .try_read()
             .map(|queue| {
                 let maybe_next = queue.peek();
                 let size = queue.size();
 
-                return Response::new(ItemResponse {
+                Response::new(ItemResponse {
                     has_item: maybe_next.is_some(),
                     item: maybe_next.unwrap_or(&vec![]).clone(),
                     size: size as i64,
-                });
+                })
             })
-            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"));
+            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
     }
 
     async fn get_size(
         &self,
         _request: Request<GetSizeRequest>,
     ) -> Result<Response<GetSizeResponse>, Status> {
-        return self
+        self
             .queue
             .try_read()
             .map(|queue| {
                 let size = queue.size();
 
-                return Response::new(GetSizeResponse { size: size as i64 });
+                Response::new(GetSizeResponse { size: size as i64 })
             })
-            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"));
+            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
     }
 }
 
@@ -123,9 +123,9 @@ impl HealthService for DefaultHealthService {
         &self,
         _request: Request<HealthCheckRequest>,
     ) -> Result<Response<HealthCheckResponse>, Status> {
-        return Ok(Response::new(HealthCheckResponse {
+        Ok(Response::new(HealthCheckResponse {
             status: ServingStatus::Serving as i32,
-        }));
+        }))
     }
 
     type WatchStream =
