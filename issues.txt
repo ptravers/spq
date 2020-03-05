@@ -8,7 +8,7 @@ HIGH:
 - Add memoization in network layer
 - Add disk caching for recovery
 - Add tracing to all layers
-- Add regestering of a callback to be notified when new jobs arrive
+- Add regestering of a callback to be notified when new items arrive
 - Add callbacks fair scheduling each callback receives a fair number of fair jobs (?)
 - Add monitoring status of callback so must be notified that callback is available to be called again (?)
 - Add notion of quotas when callbacks are tracked ie knowledge of usage completion (?)
