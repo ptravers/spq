@@ -22,9 +22,9 @@ impl<T: Clone + Ord> SortingPriorityQueue<T> {
         }
     }
 
-    pub fn add(&mut self, item: T, features: Vec<FeatureValue>) -> Result<usize, &str> {
+    pub fn enqueue(&mut self, item: T, features: Vec<FeatureValue>) -> Result<usize, &str> {
         if features.len() != self.feature_space.dimension() {
-            return Err("Invalid feature vector must have same size as feature space");
+            Err("Invalid feature vector must have same size as feature space")
         } else {
             let feature_names_hash = create_hash(&features, false);
 
@@ -38,7 +38,7 @@ impl<T: Clone + Ord> SortingPriorityQueue<T> {
 
             let mut features_copy = features.clone();
 
-            return Ok({
+            Ok({
                 self.items
                     .entry(hash)
                     .or_insert({
@@ -48,37 +48,33 @@ impl<T: Clone + Ord> SortingPriorityQueue<T> {
                     .push(item);
 
                 self.feature_space.epoch_step()
-            });
+            })
         }
     }
 
     pub fn size(&self) -> usize {
-        return self.feature_space.total_items();
+        self.feature_space.total_items()
     }
 
     pub fn peek(&self) -> Option<&T> {
-        return self
-            .feature_space
+        self.feature_space
             .peek_next_leaf_feature()
             .and_then(|next| {
                 self.items
                     .get(&next)
                     .and_then(|leaf_items| leaf_items.peek())
-            });
+            })
     }
 
-    pub fn next(&mut self) -> (Option<T>, usize) {
+    pub fn dequeue(&mut self) -> (Option<T>, usize) {
         let mut next_item: Option<T> = None;
 
-        match self.feature_space.use_next_leaf_feature() {
-            Some(next) => {
-                self.items
-                    .entry(next)
-                    .and_modify(|leaf_items| next_item = leaf_items.pop());
-            }
-            None => {}
+        if let Some(next) = self.feature_space.use_next_leaf_feature() {
+            self.items
+                .entry(next)
+                .and_modify(|leaf_items| next_item = leaf_items.pop());
         }
 
-        return (next_item, self.feature_space.epoch_step());
+        (next_item, self.feature_space.epoch_step())
     }
 }

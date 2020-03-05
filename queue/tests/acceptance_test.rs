@@ -19,11 +19,11 @@ fn must_be_empty_at_creation() {
 }
 
 #[test]
-fn must_contain_added_item() {
+fn must_contain_enqueueed_item() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
     let expected_element: Option<&i32> = Some(&1);
 
-    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
 
     assert_eq!(queue.peek(), expected_element);
 }
@@ -33,8 +33,8 @@ fn peek_must_not_alter_contents() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
     let expected_element: Option<&i32> = Some(&2);
 
-    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
-    queue.add(2, DEFAULT_FEATURES.clone()).unwrap();
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.enqueue(2, DEFAULT_FEATURES.clone()).unwrap();
 
     assert_eq!(queue.peek(), expected_element);
     assert_eq!(queue.peek(), expected_element);
@@ -45,65 +45,65 @@ fn peek_must_not_alter_contents() {
 fn must_decrease_size_when_items_are_removed() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
-    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
-    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
-    queue.next();
-    queue.next();
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.dequeue();
+    queue.dequeue();
 
     assert_eq!(queue.size(), 0);
 }
 
 #[test]
-fn must_increase_size_when_items_are_added() {
+fn must_increase_size_when_items_are_enqueueed() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
-    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
-    queue.add(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
 
     assert_eq!(queue.size(), 2);
 }
 
 #[test]
-fn must_return_next_item() {
+fn must_return_dequeue_item() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
-    let next_item = 1;
+    let dequeue_item = 1;
 
     queue
-        .add(next_item.clone(), DEFAULT_FEATURES.clone())
+        .enqueue(dequeue_item.clone(), DEFAULT_FEATURES.clone())
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(next_item), 2));
+    assert_eq!(queue.dequeue(), (Some(dequeue_item), 2));
 }
 
 #[test]
-fn must_remove_next_item_after_returning() {
+fn must_remove_dequeue_item_after_returning() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
-    let next_item = 1;
+    let dequeue_item = 1;
 
     queue
-        .add(next_item.clone(), DEFAULT_FEATURES.clone())
+        .enqueue(dequeue_item.clone(), DEFAULT_FEATURES.clone())
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(next_item), 2));
+    assert_eq!(queue.dequeue(), (Some(dequeue_item), 2));
 
-    assert_eq!(queue.next(), (None, 2));
+    assert_eq!(queue.dequeue(), (None, 2));
 }
 
 #[test]
 fn must_return_items_in_order() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
-    let next_item = 2;
-    let not_next_item = 1;
+    let dequeue_item = 2;
+    let not_dequeue_item = 1;
 
     queue
-        .add(next_item.clone(), DEFAULT_FEATURES.clone())
+        .enqueue(dequeue_item.clone(), DEFAULT_FEATURES.clone())
         .unwrap();
 
     queue
-        .add(not_next_item.clone(), DEFAULT_FEATURES.clone())
+        .enqueue(not_dequeue_item.clone(), DEFAULT_FEATURES.clone())
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(next_item), 3));
+    assert_eq!(queue.dequeue(), (Some(dequeue_item), 3));
 }
 
 #[test]
@@ -115,19 +115,21 @@ fn must_balance_selection_by_leaf_feature() {
     let fairest_item = 3;
 
     queue
-        .add(first_item.clone(), DEFAULT_FEATURES.clone())
+        .enqueue(first_item.clone(), DEFAULT_FEATURES.clone())
         .unwrap();
-    queue.add(unseen_item, DEFAULT_FEATURES.clone()).unwrap();
     queue
-        .add(
+        .enqueue(unseen_item, DEFAULT_FEATURES.clone())
+        .unwrap();
+    queue
+        .enqueue(
             fairest_item,
             vec![FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 2)],
         )
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(first_item), 4));
+    assert_eq!(queue.dequeue(), (Some(first_item), 4));
 
-    assert_eq!(queue.next(), (Some(fairest_item), 5));
+    assert_eq!(queue.dequeue(), (Some(fairest_item), 5));
 }
 
 #[test]
@@ -142,7 +144,7 @@ fn must_balance_selection_by_feature_heirarchy() {
     let fairest_item = 1;
 
     queue
-        .add(
+        .enqueue(
             first_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -151,7 +153,7 @@ fn must_balance_selection_by_feature_heirarchy() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             unseen_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -160,7 +162,7 @@ fn must_balance_selection_by_feature_heirarchy() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             fairest_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 2),
@@ -169,9 +171,9 @@ fn must_balance_selection_by_feature_heirarchy() {
         )
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(first_item), 4));
+    assert_eq!(queue.dequeue(), (Some(first_item), 4));
 
-    assert_eq!(queue.next(), (Some(fairest_item), 5));
+    assert_eq!(queue.dequeue(), (Some(fairest_item), 5));
 }
 
 #[test]
@@ -187,7 +189,7 @@ fn should_be_drained_by_feature_heirarchy() {
     let fairest_item = 1;
 
     queue
-        .add(
+        .enqueue(
             first_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -196,7 +198,7 @@ fn should_be_drained_by_feature_heirarchy() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             second_last_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -205,7 +207,7 @@ fn should_be_drained_by_feature_heirarchy() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             last_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -214,7 +216,7 @@ fn should_be_drained_by_feature_heirarchy() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             fairest_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 2),
@@ -223,22 +225,22 @@ fn should_be_drained_by_feature_heirarchy() {
         )
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(first_item), 5));
+    assert_eq!(queue.dequeue(), (Some(first_item), 5));
 
-    assert_eq!(queue.next(), (Some(fairest_item), 6));
+    assert_eq!(queue.dequeue(), (Some(fairest_item), 6));
 
-    assert_eq!(queue.next(), (Some(second_last_item), 7));
+    assert_eq!(queue.dequeue(), (Some(second_last_item), 7));
 
-    assert_eq!(queue.next(), (Some(last_item), 8));
+    assert_eq!(queue.dequeue(), (Some(last_item), 8));
 
-    assert_eq!(queue.next(), (None, 8));
+    assert_eq!(queue.dequeue(), (None, 8));
 }
 
 #[test]
 fn must_validate_features_size() {
     let mut queue = SortingPriorityQueue::<i32>::new(vec![]);
 
-    let result = queue.add(1, DEFAULT_FEATURES.clone());
+    let result = queue.enqueue(1, DEFAULT_FEATURES.clone());
 
     assert_eq!(result.is_err(), true);
 }
@@ -247,7 +249,7 @@ fn must_validate_features_size() {
 fn must_validate_features_exist_in_space() {
     let mut queue = SortingPriorityQueue::<i32>::new(vec!["Different Name".to_string()]);
 
-    let result = queue.add(1, DEFAULT_FEATURES.clone());
+    let result = queue.enqueue(1, DEFAULT_FEATURES.clone());
 
     assert_eq!(result.is_err(), true);
 }
@@ -264,7 +266,7 @@ fn must_guarantee_fair_retrieval_by_feature_value_regardless_of_path() {
     let fairest_item = 1;
 
     queue
-        .add(
+        .enqueue(
             first_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -273,7 +275,7 @@ fn must_guarantee_fair_retrieval_by_feature_value_regardless_of_path() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             last_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 2),
@@ -282,7 +284,7 @@ fn must_guarantee_fair_retrieval_by_feature_value_regardless_of_path() {
         )
         .unwrap();
     queue
-        .add(
+        .enqueue(
             fairest_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 2),
@@ -291,11 +293,11 @@ fn must_guarantee_fair_retrieval_by_feature_value_regardless_of_path() {
         )
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(first_item), 4));
+    assert_eq!(queue.dequeue(), (Some(first_item), 4));
 
-    assert_eq!(queue.next(), (Some(fairest_item), 5));
+    assert_eq!(queue.dequeue(), (Some(fairest_item), 5));
 
-    assert_eq!(queue.next(), (Some(last_item), 6));
+    assert_eq!(queue.dequeue(), (Some(last_item), 6));
 }
 
 #[test]
@@ -309,7 +311,7 @@ fn after_being_drained_must_accept_and_return_new_items() {
     let last_item = 2;
 
     queue
-        .add(
+        .enqueue(
             first_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -318,12 +320,12 @@ fn after_being_drained_must_accept_and_return_new_items() {
         )
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(first_item), 2));
+    assert_eq!(queue.dequeue(), (Some(first_item), 2));
 
-    assert_eq!(queue.next(), (None, 2));
+    assert_eq!(queue.dequeue(), (None, 2));
 
     queue
-        .add(
+        .enqueue(
             last_item,
             vec![
                 FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
@@ -332,33 +334,33 @@ fn after_being_drained_must_accept_and_return_new_items() {
         )
         .unwrap();
 
-    assert_eq!(queue.next(), (Some(last_item), 4));
+    assert_eq!(queue.dequeue(), (Some(last_item), 4));
 
-    assert_eq!(queue.next(), (None, 4));
+    assert_eq!(queue.dequeue(), (None, 4));
 }
 
 #[test]
-fn must_increment_step_for_each_add() {
+fn must_increment_step_for_each_enqueue() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
-    let add_result = queue.add(1, DEFAULT_FEATURES.clone());
+    let enqueue_result = queue.enqueue(1, DEFAULT_FEATURES.clone());
 
-    assert_eq!(add_result, Result::Ok(1));
+    assert_eq!(enqueue_result, Result::Ok(1));
 
-    let add_result = queue.add(1, DEFAULT_FEATURES.clone());
+    let enqueue_result = queue.enqueue(1, DEFAULT_FEATURES.clone());
 
-    assert_eq!(add_result, Result::Ok(2));
+    assert_eq!(enqueue_result, Result::Ok(2));
 }
 
 #[test]
-fn must_increment_step_for_each_next() {
+fn must_increment_step_for_each_dequeue() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
 
     let item: i32 = 1;
 
-    let add_result = queue.add(item, DEFAULT_FEATURES.clone());
+    let enqueue_result = queue.enqueue(item, DEFAULT_FEATURES.clone());
 
-    assert_eq!(add_result, Result::Ok(1));
+    assert_eq!(enqueue_result, Result::Ok(1));
 
-    assert_eq!(queue.next(), (Some(item), 2));
+    assert_eq!(queue.dequeue(), (Some(item), 2));
 }

@@ -22,7 +22,7 @@ impl Hash for FeatureValue {
     }
 }
 
-pub fn create_hash(features: &Vec<FeatureValue>, include_value: bool) -> u64 {
+pub fn create_hash(features: &[FeatureValue], include_value: bool) -> u64 {
     let mut hasher = DefaultHasher::new();
 
     for feature in features {
@@ -32,7 +32,7 @@ pub fn create_hash(features: &Vec<FeatureValue>, include_value: bool) -> u64 {
         }
     }
 
-    return hasher.finish();
+    hasher.finish()
 }
 
 #[derive(Debug, Clone)]
@@ -45,7 +45,7 @@ struct FeatureNodeValue {
 
 impl FeatureNodeValue {
     pub fn new(
-        name: &String,
+        name: &str,
         value: usize,
         items_at_index: usize,
         child_index: u64,
@@ -75,10 +75,10 @@ impl FeatureNode {
     fn find_next(
         &self,
         feature_value_to_epoch_step: &HashMap<u64, usize>,
-        current_epoch_step: &usize,
+        current_epoch_step: usize,
     ) -> Option<(usize, u64)> {
         let mut next: Option<(usize, u64)> = None;
-        let mut lowest_epoch_step: &usize = current_epoch_step;
+        let mut lowest_epoch_step: &usize = &current_epoch_step;
 
         for (i, value) in self.values.iter().enumerate() {
             let value_last_used_epoch_step = feature_value_to_epoch_step.get(&value.hash).unwrap();
@@ -89,13 +89,13 @@ impl FeatureNode {
             }
         }
 
-        return next;
+        next
     }
 
     pub fn peek(
         &self,
         feature_value_to_epoch_step: &HashMap<u64, usize>,
-        current_epoch_step: &usize,
+        current_epoch_step: usize,
     ) -> Option<&FeatureNodeValue> {
         self.find_next(feature_value_to_epoch_step, current_epoch_step)
             .and_then(|(next_index, _)| self.values.get(next_index))
@@ -103,7 +103,7 @@ impl FeatureNode {
 
     pub fn peek_and_update(
         &mut self,
-        current_epoch_step: &usize,
+        current_epoch_step: usize,
         feature_value_to_epoch_step: &mut HashMap<u64, usize>,
     ) -> Option<FeatureNodeValue> {
         self.find_next(feature_value_to_epoch_step, current_epoch_step)
@@ -172,12 +172,12 @@ impl FeatureSpace {
             match self.feature_tree.get(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value =
-                        feature_node.peek(&self.feature_value_to_epoch_step, &self.epoch_step);
+                        feature_node.peek(&self.feature_value_to_epoch_step, self.epoch_step);
                     return next_feature_node_value.map(|node_value| node_value.child_index);
                 }
                 Some(feature_node) => {
                     let next_feature_node_value =
-                        feature_node.peek(&self.feature_value_to_epoch_step, &self.epoch_step);
+                        feature_node.peek(&self.feature_value_to_epoch_step, self.epoch_step);
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
                         None if feature_space_layer != 0 => panic!(
@@ -191,7 +191,7 @@ impl FeatureSpace {
             }
         }
 
-        return None;
+        None
     }
 
     pub fn use_next_leaf_feature(&mut self) -> Option<u64> {
@@ -202,7 +202,7 @@ impl FeatureSpace {
             match self.feature_tree.get_mut(&next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value = feature_node
-                        .peek_and_update(&next_epoch_step, &mut self.feature_value_to_epoch_step);
+                        .peek_and_update(next_epoch_step, &mut self.feature_value_to_epoch_step);
 
                     if next_feature_node_value.is_some() {
                         self.epoch_step = next_epoch_step;
@@ -213,7 +213,7 @@ impl FeatureSpace {
                 }
                 Some(feature_node) => {
                     let next_feature_node_value = feature_node
-                        .peek_and_update(&next_epoch_step, &mut self.feature_value_to_epoch_step);
+                        .peek_and_update(next_epoch_step, &mut self.feature_value_to_epoch_step);
 
                     match next_feature_node_value.map(|node_value| node_value.child_index) {
                         Some(next_index) => next_node = next_index,
@@ -228,7 +228,7 @@ impl FeatureSpace {
             }
         }
 
-        return None;
+        None
     }
 
     pub fn add_item(&mut self, features: &mut Vec<FeatureValue>, leaf_index: u64) {
@@ -250,11 +250,7 @@ impl FeatureSpace {
             current_node_index = create_hash(&next_features, i != features.len());
 
             match self.feature_tree.get_mut(&current_node_index) {
-                Some(FeatureNode {
-                    name: _,
-                    values,
-                    has_leaves: _,
-                }) => {
+                Some(FeatureNode { values, .. }) => {
                     let maybe_value = values.iter_mut().find(|feature_node_value| {
                         feature_node_value.value == feature.value
                             && feature_node_value.child_index == child_index
@@ -270,10 +266,9 @@ impl FeatureSpace {
 
                             values.push(value.clone());
 
-                            if !self.feature_value_to_epoch_step.contains_key(&value.hash) {
-                                self.feature_value_to_epoch_step
-                                    .insert(value.hash, self.epoch_step);
-                            }
+                            self.feature_value_to_epoch_step
+                                .entry(value.hash)
+                                .or_insert(self.epoch_step);
                         }
                     }
                 }
@@ -284,16 +279,15 @@ impl FeatureSpace {
 
                     values.push(value.clone());
 
-                    if !self.feature_value_to_epoch_step.contains_key(&value.hash) {
-                        self.feature_value_to_epoch_step
-                            .insert(value.hash, self.epoch_step);
-                    }
+                    self.feature_value_to_epoch_step
+                        .entry(value.hash)
+                        .or_insert(self.epoch_step);
 
                     self.feature_tree.insert(
                         current_node_index,
                         FeatureNode {
                             name: feature.name.clone(),
-                            values: values,
+                            values,
                             has_leaves: i == 1,
                         },
                     );
