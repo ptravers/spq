@@ -22,10 +22,16 @@ vet:
 	cargo clippy
 
 fix: vet
-	cargo fix -Z unstable-options --clippy
+	#	doesn't currently work see
+	#	https://github.com/rust-lang/rust-clippy/issues/3837
+#	cargo fix -Z unstable-options --clippy
 
-test: clean fmt vet
+build: fmt fix
+	cargo build --release
+
+test: build
 	cargo test --verbose
 
-build: clean fmt vet
-	cargo build --release
+clean-build: clean build
+
+clean-test: clean test

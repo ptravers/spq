@@ -16,8 +16,9 @@ use spq_generated::sorting_priority_queue_service_server::{
     SortingPriorityQueueService, SortingPriorityQueueServiceServer,
 };
 use spq_generated::{
-    DequeueRequest, EnqueueRequest, EnqueueResponse, GetSizeRequest, GetSizeResponse,
-    HealthCheckRequest, HealthCheckResponse, ItemResponse, PeekItemRequest,
+    DequeueRequest, EnqueueRequest, EnqueueResponse, GetEpochRequest, GetEpochResponse,
+    GetSizeRequest, GetSizeResponse, HealthCheckRequest, HealthCheckResponse, ItemResponse,
+    PeekItemRequest,
 };
 use std::sync::{Arc, RwLock};
 
@@ -35,8 +36,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
         &self,
         _request: Request<EnqueueRequest>,
     ) -> Result<Response<EnqueueResponse>, Status> {
-        self
-            .queue
+        self.queue
             .try_write()
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|mut queue| {
@@ -62,8 +62,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
         &self,
         _request: Request<DequeueRequest>,
     ) -> Result<Response<ItemResponse>, Status> {
-        self
-            .queue
+        self.queue
             .try_write()
             .map(|mut queue| {
                 let (maybe_next, _) = queue.dequeue();
@@ -82,8 +81,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
         &self,
         _request: Request<PeekItemRequest>,
     ) -> Result<Response<ItemResponse>, Status> {
-        self
-            .queue
+        self.queue
             .try_read()
             .map(|queue| {
                 let maybe_next = queue.peek();
@@ -102,13 +100,28 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
         &self,
         _request: Request<GetSizeRequest>,
     ) -> Result<Response<GetSizeResponse>, Status> {
-        self
-            .queue
+        self.queue
             .try_read()
             .map(|queue| {
                 let size = queue.size();
 
                 Response::new(GetSizeResponse { size: size as i64 })
+            })
+            .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
+    }
+
+    async fn get_epoch(
+        &self,
+        _request: Request<GetEpochRequest>,
+    ) -> Result<Response<GetEpochResponse>, Status> {
+        self.queue
+            .try_read()
+            .map(|queue| {
+                let epoch = queue.get_epoch();
+
+                Response::new(GetEpochResponse {
+                    epoch: epoch as i64,
+                })
             })
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
     }

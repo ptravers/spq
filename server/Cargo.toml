@@ -14,3 +14,9 @@ tokio-timer = "0.2"
 
 [build-dependencies]
 tonic-build = "0.1.1"
+
+[source.crates-io]
+replace-with = 'vendored-sources'
+
+[source.vendored-sources]
+directory = './vendor'

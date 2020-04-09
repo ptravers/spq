@@ -7,6 +7,7 @@ service SortingPriorityQueueService {
   rpc PeekNextItem(PeekItemRequest) returns (ItemResponse) {}
   rpc GetSize(GetSizeRequest) returns (GetSizeResponse) {}
   rpc Enqueue(EnqueueRequest) returns (EnqueueResponse) {}
+  rpc GetEpoch(GetEpochRequest) returns (GetEpochResponse) {}
 }
 
 message EnqueueRequest {
@@ -39,6 +40,13 @@ message ItemResponse {
   bytes item = 1;
   bool hasItem = 2;
   int64 size = 3;
+}
+
+message GetEpochRequest {
+}
+
+message GetEpochResponse {
+  int64 epoch = 1;
 }
 
 service HealthService {

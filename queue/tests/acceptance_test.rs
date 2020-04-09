@@ -29,6 +29,19 @@ fn must_contain_enqueueed_item() {
 }
 
 #[test]
+fn must_increment_the_epoch_for_each_state_change() {
+    let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
+
+    queue.enqueue(1, DEFAULT_FEATURES.clone()).unwrap();
+
+    assert_eq!(queue.get_epoch(), 1);
+
+    queue.dequeue();
+
+    assert_eq!(queue.get_epoch(), 2);
+}
+
+#[test]
 fn peek_must_not_alter_contents() {
     let mut queue = SortingPriorityQueue::<i32>::new(DEFAULT_FEATURE_NAMES.to_vec());
     let expected_element: Option<&i32> = Some(&2);
