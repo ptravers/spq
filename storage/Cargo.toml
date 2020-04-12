@@ -1,0 +1,5 @@
+[package]
+name = "sp_storage"
+version = "0.1.0"
+authors = ["Pete Travers <traverspw@gmail.com>"]
+edition = "2018"

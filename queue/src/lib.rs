@@ -1,22 +1,25 @@
 use std::collections::BinaryHeap;
-use std::collections::HashMap;
 use std::result::Result;
 use std::result::Result::{Err, Ok};
 pub mod feature_space;
 use feature_space::{create_hash, FeatureSpace, FeatureValue};
+use sp_storage::Storage;
 
 #[allow(dead_code)]
 pub struct SortingPriorityQueue<T: Clone + Ord> {
     feature_space: FeatureSpace,
-    items: HashMap<u64, BinaryHeap<T>>,
+    items: Storage<BinaryHeap<T>>,
 }
 
 #[allow(dead_code)]
-impl<T: Clone + Ord> SortingPriorityQueue<T> {
+impl<T> SortingPriorityQueue<T>
+where
+    T: Clone + Ord,
+{
     pub fn new(feature_space: Vec<String>) -> SortingPriorityQueue<T> {
         SortingPriorityQueue {
             feature_space: FeatureSpace::new(0, feature_space),
-            items: HashMap::new(),
+            items: Storage::new(),
         }
     }
 
@@ -59,7 +62,7 @@ impl<T: Clone + Ord> SortingPriorityQueue<T> {
             .peek_next_leaf_feature()
             .and_then(|next| {
                 self.items
-                    .get(&next)
+                    .get(next)
                     .and_then(|leaf_items| leaf_items.peek())
             })
     }

@@ -1,5 +1,5 @@
+use sp_storage::Storage;
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 
@@ -74,14 +74,14 @@ struct FeatureNode {
 impl FeatureNode {
     fn find_next(
         &self,
-        feature_value_to_epoch_step: &HashMap<u64, usize>,
+        feature_value_to_epoch_step: &Storage<usize>,
         current_epoch_step: usize,
     ) -> Option<(usize, u64)> {
         let mut next: Option<(usize, u64)> = None;
         let mut lowest_epoch_step: &usize = &current_epoch_step;
 
         for (i, value) in self.values.iter().enumerate() {
-            let value_last_used_epoch_step = feature_value_to_epoch_step.get(&value.hash).unwrap();
+            let value_last_used_epoch_step = feature_value_to_epoch_step.get(value.hash).unwrap();
 
             if value_last_used_epoch_step <= lowest_epoch_step && value.items_at_index > 0 {
                 next = Some((i, value.hash));
@@ -94,7 +94,7 @@ impl FeatureNode {
 
     pub fn peek(
         &self,
-        feature_value_to_epoch_step: &HashMap<u64, usize>,
+        feature_value_to_epoch_step: &Storage<usize>,
         current_epoch_step: usize,
     ) -> Option<&FeatureNodeValue> {
         self.find_next(feature_value_to_epoch_step, current_epoch_step)
@@ -104,7 +104,7 @@ impl FeatureNode {
     pub fn peek_and_update(
         &mut self,
         current_epoch_step: usize,
-        feature_value_to_epoch_step: &mut HashMap<u64, usize>,
+        feature_value_to_epoch_step: &mut Storage<usize>,
     ) -> Option<FeatureNodeValue> {
         self.find_next(feature_value_to_epoch_step, current_epoch_step)
             .and_then(|(next_index, next_value_hash)| {
@@ -124,8 +124,8 @@ pub struct FeatureSpace {
     root_index: u64,
     dimension: usize,
     feature_names_hash: u64,
-    feature_tree: HashMap<u64, FeatureNode>,
-    feature_value_to_epoch_step: HashMap<u64, usize>,
+    feature_tree: Storage<FeatureNode>,
+    feature_value_to_epoch_step: Storage<usize>,
 }
 
 impl FeatureSpace {
@@ -144,8 +144,8 @@ impl FeatureSpace {
             root_index: 0,
             dimension: features.len(),
             feature_names_hash,
-            feature_tree: HashMap::new(),
-            feature_value_to_epoch_step: HashMap::new(),
+            feature_tree: Storage::new(),
+            feature_value_to_epoch_step: Storage::new(),
         }
     }
 
@@ -169,7 +169,7 @@ impl FeatureSpace {
         let mut next_node = self.root_index;
 
         for feature_space_layer in 0..self.dimension {
-            match self.feature_tree.get(&next_node) {
+            match self.feature_tree.get(next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value =
                         feature_node.peek(&self.feature_value_to_epoch_step, self.epoch_step);
@@ -199,7 +199,7 @@ impl FeatureSpace {
         let mut next_node = self.root_index;
 
         for feature_space_layer in 0..self.dimension {
-            match self.feature_tree.get_mut(&next_node) {
+            match self.feature_tree.get_mut(next_node) {
                 Some(ref mut feature_node) if feature_node.has_leaves => {
                     let next_feature_node_value = feature_node
                         .peek_and_update(next_epoch_step, &mut self.feature_value_to_epoch_step);
@@ -249,7 +249,7 @@ impl FeatureSpace {
             next_features.truncate(i);
             current_node_index = create_hash(&next_features, i != features.len());
 
-            match self.feature_tree.get_mut(&current_node_index) {
+            match self.feature_tree.get_mut(current_node_index) {
                 Some(FeatureNode { values, .. }) => {
                     let maybe_value = values.iter_mut().find(|feature_node_value| {
                         feature_node_value.value == feature.value
