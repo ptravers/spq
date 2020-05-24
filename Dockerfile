@@ -9,16 +9,9 @@ RUN apt-get update && \
     apt-get install -y clang && \
     ln -s /usr/bin/g++ /usr/bin/musl-g++
 
-COPY server/build.rs /app/server/
-COPY server/proto /app/server/
-COPY server/vendor /app/server/
-COPY server/.cargo /app/server/
-COPY server/src /app/server/
-COPY server/Cargo.lock /app/server/
-COPY server/Cargo.toml /app/server/
+COPY . /app/
 
 WORKDIR /app/server
-
 RUN rustup component add rustfmt && \
     cargo fetch
 
