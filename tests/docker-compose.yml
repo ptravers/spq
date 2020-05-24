@@ -6,10 +6,10 @@ services:
       context: ..
       dockerfile: tests/Dockerfile
     image: spq-tests:latest
-    command: [
-      "./entrypoint.sh",
-      "pytest -p no:warnings /app/tests/"
-    ]
+    entrypoint: "./entrypoint.sh"
+    command: "./run_tests.sh"
+    environment:
+      - MARKER
     depends_on:
       - spq
     networks:
@@ -30,6 +30,8 @@ services:
     networks:
       - default
     container_name: spq
+    volumes:
+      - "/var/lib/spqr:/var/lib/spqr:rw"
 networks:
   default:
     name: end-to-end-tests-${COMMIT_HASH}

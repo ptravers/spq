@@ -15,13 +15,19 @@ RUN cd /app/tests/ && \
 RUN ls -alF /app/tests/proto/
 
 COPY tests/integration_tests/ /app/tests/
-COPY tests/entrypoint.sh /app/entrypoint.sh
+
+COPY tests/entrypoint.sh /app/tests/entrypoint.sh
+RUN chmod +x /app/tests/entrypoint.sh
+
+COPY tests/run_tests.sh /app/tests/run_tests.sh
+RUN chmod +x /app/tests/run_tests.sh
 
 RUN touch /app/tests/__init__.py
 
-RUN chmod +x /app/entrypoint.sh
 
 ENV PYTHONPATH /app/tests
 
+WORKDIR /app/tests/
+
 # The below command is overidden in docker-compose.yml
-CMD pytest -s -p no:warnings /app/tests/
+CMD echo "should not be seen"

@@ -1,7 +1,10 @@
 from proto import spq_pb2
+from helpers import drain_queue
 
 
 def test_peek_item(spq_client):
+    drain_queue(spq_client)
+
     sent_item = bytes("peek_item", "utf-8")
     request = spq_pb2.EnqueueRequest(
         item=sent_item, features=[{"name": "feature_name", "value": 0}]

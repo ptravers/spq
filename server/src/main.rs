@@ -20,10 +20,10 @@ use spq_generated::{
     GetSizeRequest, GetSizeResponse, HealthCheckRequest, HealthCheckResponse, ItemResponse,
     PeekItemRequest,
 };
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 pub struct DefaultSortingPriorityQueueService {
-    queue: Arc<RwLock<SortingPriorityQueue<Vec<u8>>>>,
+    queue: RwLock<SortingPriorityQueue>,
 }
 
 fn to_feature_value(feature: Feature) -> FeatureValue {
@@ -41,7 +41,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|mut queue| {
                 let add_item_request = _request.get_ref();
-                let size = queue.size();
+                let size = queue.size()?;
                 queue
                     .enqueue(
                         add_item_request.item.clone(),
@@ -64,17 +64,17 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
     ) -> Result<Response<ItemResponse>, Status> {
         self.queue
             .try_write()
-            .map(|mut queue| {
-                let (maybe_next, _) = queue.dequeue();
-                let size = queue.size();
-
-                Response::new(ItemResponse {
-                    has_item: maybe_next.is_some(),
-                    item: maybe_next.unwrap_or_else(|| vec![]),
-                    size: size as i64,
-                })
-            })
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
+            .and_then(|mut queue| {
+                let (maybe_next, _) = queue.dequeue()?;
+                let size = queue.size()?;
+
+                Ok(Response::new(ItemResponse {
+                    has_item: maybe_next.is_some(),
+                    item: maybe_next.unwrap_or_default(),
+                    size: size as i64,
+                }))
+            })
     }
 
     async fn peek_next_item(
@@ -83,17 +83,17 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
     ) -> Result<Response<ItemResponse>, Status> {
         self.queue
             .try_read()
-            .map(|queue| {
-                let maybe_next = queue.peek();
-                let size = queue.size();
-
-                Response::new(ItemResponse {
-                    has_item: maybe_next.is_some(),
-                    item: maybe_next.unwrap_or(&vec![]).clone(),
-                    size: size as i64,
-                })
-            })
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
+            .and_then(|queue| {
+                let maybe_next = queue.peek()?;
+                let size = queue.size()?;
+
+                Ok(Response::new(ItemResponse {
+                    has_item: maybe_next.is_some(),
+                    item: maybe_next.unwrap_or_default(),
+                    size: size as i64,
+                }))
+            })
     }
 
     async fn get_size(
@@ -102,12 +102,12 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
     ) -> Result<Response<GetSizeResponse>, Status> {
         self.queue
             .try_read()
-            .map(|queue| {
-                let size = queue.size();
-
-                Response::new(GetSizeResponse { size: size as i64 })
-            })
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
+            .and_then(|queue| {
+                let size = queue.size()?;
+
+                Ok(Response::new(GetSizeResponse { size: size as i64 }))
+            })
     }
 
     async fn get_epoch(
@@ -116,14 +116,14 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
     ) -> Result<Response<GetEpochResponse>, Status> {
         self.queue
             .try_read()
-            .map(|queue| {
-                let epoch = queue.get_epoch();
-
-                Response::new(GetEpochResponse {
-                    epoch: epoch as i64,
-                })
-            })
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
+            .and_then(|queue| {
+                let epoch = queue.get_epoch()?;
+
+                Ok(Response::new(GetEpochResponse {
+                    epoch: epoch as i64,
+                }))
+            })
     }
 }
 
@@ -162,11 +162,15 @@ impl HealthService for DefaultHealthService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::0]:9090".parse()?;
-    let queue = Arc::new(RwLock::new(SortingPriorityQueue::new(vec![
-        "feature_name".to_string()
-    ])));
+    let queue = SortingPriorityQueue::new_durable(
+        vec!["feature_name".to_string()],
+        "/var/lib/spqr".to_string(),
+    )
+    .unwrap_or_else(|err| panic!(err));
 
-    let spq_service = DefaultSortingPriorityQueueService { queue };
+    let spq_service = DefaultSortingPriorityQueueService {
+        queue: RwLock::new(queue),
+    };
     let health_service = DefaultHealthService::default();
 
     println!("Booting");

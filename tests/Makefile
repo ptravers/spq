@@ -16,15 +16,17 @@ help:
 
 clean:
 	docker-compose down
+	sudo rm -rf /var/lib/spqr/*
 
 build:
 	docker-compose build
 
 run-test:
 	docker-compose build test
-	docker-compose up --exit-code-from test
+	MARKER=nothing docker-compose up --exit-code-from test
+	MARKER=durability docker-compose up --exit-code-from test
 
-test: clean run-test clean
+test: clean build run-test clean
 
 run: clean build
 	docker-compose spq

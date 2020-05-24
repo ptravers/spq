@@ -1,85 +1,94 @@
-use std::collections::BinaryHeap;
+use sp_error::Error;
 use std::result::Result;
 use std::result::Result::{Err, Ok};
 pub mod feature_space;
 use feature_space::{create_hash, FeatureSpace, FeatureValue};
-use sp_storage::Storage;
+use sp_storage::{Item, ShardedHeap};
 
 #[allow(dead_code)]
-pub struct SortingPriorityQueue<T: Clone + Ord> {
+pub struct SortingPriorityQueue {
     feature_space: FeatureSpace,
-    items: Storage<BinaryHeap<T>>,
+    items: ShardedHeap,
 }
 
 #[allow(dead_code)]
-impl<T> SortingPriorityQueue<T>
-where
-    T: Clone + Ord,
-{
-    pub fn new(feature_space: Vec<String>) -> SortingPriorityQueue<T> {
-        SortingPriorityQueue {
-            feature_space: FeatureSpace::new(0, feature_space),
-            items: Storage::new(),
-        }
+impl SortingPriorityQueue {
+    pub fn new(features: Vec<String>) -> Result<SortingPriorityQueue, Error> {
+        Ok(SortingPriorityQueue {
+            feature_space: FeatureSpace::new(features, None)?,
+            items: ShardedHeap::new(),
+        })
     }
 
-    pub fn enqueue(&mut self, item: T, features: Vec<FeatureValue>) -> Result<usize, &str> {
-        if features.len() != self.feature_space.dimension() {
-            Err("Invalid feature vector must have same size as feature space")
+    pub fn new_durable(
+        features: Vec<String>,
+        folder_path: String,
+    ) -> Result<SortingPriorityQueue, Error> {
+        Ok(SortingPriorityQueue {
+            feature_space: FeatureSpace::new(features, Some(folder_path))?,
+            items: ShardedHeap::new(),
+        })
+    }
+
+    pub fn enqueue(&mut self, data: Vec<u8>, features: Vec<FeatureValue>) -> Result<u64, Error> {
+        if features.len() as u64 != self.feature_space.dimension()? {
+            Err(Error::new(
+                "Invalid feature vector must have same size as feature space".to_string(),
+            ))
         } else {
             let feature_names_hash = create_hash(&features, false);
 
-            if feature_names_hash != self.feature_space.feature_names_hash() {
-                return Err(
-                    "Invalid feature vector must have same feature names as initialization",
-                );
+            if feature_names_hash != self.feature_space.feature_names_hash()? {
+                return Err(Error::new(
+                    "Invalid feature vector must have same feature names as initialization"
+                        .to_string(),
+                ));
             }
 
             let hash = create_hash(&features, true);
 
             let mut features_copy = features;
 
-            Ok({
-                self.items
-                    .entry(hash)
-                    .or_insert({
-                        self.feature_space.add_item(&mut features_copy, hash);
-                        BinaryHeap::<T>::new()
-                    })
-                    .push(item);
+            self.feature_space.add_item(&mut features_copy, hash)?;
 
-                self.feature_space.epoch_step()
-            })
+            let current_epoch_step = self.feature_space.epoch_step()?;
+
+            self.items.push(hash, Item::new(data, current_epoch_step))?;
+
+            Ok(current_epoch_step)
         }
     }
 
-    pub fn size(&self) -> usize {
+    pub fn size(&self) -> Result<u64, Error> {
         self.feature_space.total_items()
     }
 
-    pub fn peek(&self) -> Option<&T> {
-        self.feature_space
-            .peek_next_leaf_feature()
-            .and_then(|next| {
-                self.items
-                    .get(next)
-                    .and_then(|leaf_items| leaf_items.peek())
-            })
-    }
+    pub fn peek(&self) -> Result<Option<Vec<u8>>, Error> {
+        let maybe_next_leaf_feature = self.feature_space.peek_next_leaf_feature()?;
 
-    pub fn dequeue(&mut self) -> (Option<T>, usize) {
-        let mut next_item: Option<T> = None;
+        let mut maybe_item = None;
 
-        if let Some(next) = self.feature_space.use_next_leaf_feature() {
-            self.items
-                .entry(next)
-                .and_modify(|leaf_items| next_item = leaf_items.pop());
+        if let Some(next_leaf_feature) = maybe_next_leaf_feature {
+            maybe_item = self.items.peek(next_leaf_feature)?;
         }
 
-        (next_item, self.feature_space.epoch_step())
+        Ok(maybe_item.map(|item| item.data))
     }
 
-    pub fn get_epoch(&self) -> usize {
+    pub fn dequeue(&mut self) -> Result<(Option<Vec<u8>>, u64), Error> {
+        let mut next_item: Option<Vec<u8>> = None;
+
+        if let Some(next) = self.feature_space.use_next_leaf_feature()? {
+            let maybe_next_item = self.items.pop(next)?;
+            next_item = maybe_next_item.map(|item| item.data);
+        }
+
+        let epoch_step = self.feature_space.epoch_step()?;
+
+        Ok((next_item, epoch_step))
+    }
+
+    pub fn get_epoch(&self) -> Result<u64, Error> {
         self.feature_space.epoch_step()
     }
 }

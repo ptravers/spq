@@ -1,12 +1,12 @@
 [package]
-name = "sp_storage"
+name = "sp_error"
 version = "0.1.0"
 authors = ["Pete Travers <traverspw@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-sp_error = { path = "../error" }
-uuid = { version = "0.8", default-features = false, features = ["v4"] }
+bincode = "1.2.1"
+tonic = "0.1.1"
 
 [dependencies.rocksdb]
 version = "0.14.0"
