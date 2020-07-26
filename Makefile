@@ -1,37 +1,43 @@
-.PHONY: build clean test help
+.PHONY: build clean test help fmt vet fix update
 .DEFAULT: help
 
 help:
 	@echo ""
 	@echo "Options:"
-	@echo "\tmake clean 				  - remove artifacts and containers"
-	@echo "\tmake build 				  - build artifacts and images"
-	@echo "\tmake test  				  - runs tests in each subdirectory"
+	@echo "\tmake clean 				  - remove artifacts"
+	@echo "\tmake build 				  - build release artifact"
+	@echo "\tmake fmt 				    - format files"
+	@echo "\tmake vet 				    - lint and validate files"
+	@echo "\tmake unit-test  			- run tests"
+	@echo "\tmake test  				  - run unit and integration tests"
+	@echo "\tmake update  				- update dependencies"
 	@echo ""
 
-build:
-	$(MAKE) -C queue build
-	$(MAKE) -C server build
-	$(MAKE) -C storage build
-	$(MAKE) -C error build
+
+fmt:
+	cargo fmt
+
+fix: vet
+	#	doesn't currently work see
+	#	https://github.com/rust-lang/rust-clippy/issues/3837
+#	cargo fix -Z unstable-options --clippy
+
+vet:
+	cargo clippy
+
+build: fmt fix
+	cargo build
 	$(MAKE) -C integration_tests build
 
-test:
-	$(MAKE) -C queue test
-	$(MAKE) -C server test
-	$(MAKE) -C storage test
-	$(MAKE) -C error test
+unit-test:
+	cargo test --all
+
+test: build unit-test
 	$(MAKE) -C integration_tests test
 
 clean:
-	$(MAKE) -C queue clean
-	$(MAKE) -C server clean
-	$(MAKE) -C storage clean
-	$(MAKE) -C error clean
+	cargo clean
 	$(MAKE) -C integration_tests clean
 
 update:
-	$(MAKE) -C queue update
-	$(MAKE) -C server update
-	$(MAKE) -C storage update
-	$(MAKE) -C error update
+	cargo update

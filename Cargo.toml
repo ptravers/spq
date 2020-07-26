@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "error",
+  "queue",
+  "storage",
+  "server",
+  "storage"
+]
