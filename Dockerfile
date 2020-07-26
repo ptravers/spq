@@ -9,7 +9,10 @@ RUN apt-get update && \
     apt-get install -y clang && \
     ln -s /usr/bin/g++ /usr/bin/musl-g++
 
-COPY . /app/
+COPY queue/ /app/queue/
+COPY error/ /app/error/
+COPY storage/ /app/storage/
+COPY server/ /app/server/
 
 WORKDIR /app/server
 RUN rustup component add rustfmt && \
