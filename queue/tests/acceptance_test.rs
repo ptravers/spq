@@ -314,6 +314,51 @@ fn must_guarantee_fair_retrieval_by_feature_value_regardless_of_path() {
 }
 
 #[test]
+fn must_guarantee_fair_retrieval_after_items_have_been_removed() {
+    let feature_names: Vec<String> =
+        vec![ROOT_FEATURE_NAME.to_string(), LEAF_FEATURE_NAME.to_string()];
+
+    let mut queue = SortingPriorityQueue::new(feature_names).unwrap();
+
+    let first_item = vec![3];
+    let last_item = vec![2];
+    let fairest_item = vec![1];
+
+    queue
+        .enqueue(
+            first_item.clone(),
+            vec![
+                FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
+                FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        )
+        .unwrap();
+    assert_eq!(queue.dequeue().unwrap(), (Some(first_item), 2));
+
+    queue
+        .enqueue(
+            last_item.clone(),
+            vec![
+                FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
+                FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        )
+        .unwrap();
+    queue
+        .enqueue(
+            fairest_item.clone(),
+            vec![
+                FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 2),
+                FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 2),
+            ],
+        )
+        .unwrap();
+
+    assert_eq!(queue.dequeue().unwrap(), (Some(fairest_item), 5));
+    assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 6));
+}
+
+#[test]
 fn after_being_drained_must_accept_and_return_new_items() {
     let feature_names: Vec<String> =
         vec![ROOT_FEATURE_NAME.to_string(), LEAF_FEATURE_NAME.to_string()];
@@ -410,7 +455,7 @@ fn must_maintain_epoch_between_instances_when_durable() {
 }
 
 #[test]
-fn must_not_maintain_epoch_between_instances_when_durable() {
+fn must_not_maintain_epoch_between_instances_when_not_durable() {
     let mut queue = SortingPriorityQueue::new(DEFAULT_FEATURE_NAMES.to_vec()).unwrap();
 
     let item: Vec<u8> = vec![1];
@@ -424,4 +469,70 @@ fn must_not_maintain_epoch_between_instances_when_durable() {
     let queue = SortingPriorityQueue::new(DEFAULT_FEATURE_NAMES.to_vec()).unwrap();
 
     assert_eq!(queue.get_epoch(), Ok(0));
+}
+
+#[test]
+fn must_maintain_feature_space_between_instances_when_durable_and_queue_empty() {
+    let directory = "/tmp/durable2".to_string();
+
+    match std::fs::remove_dir_all(directory.clone()) {
+        Ok(_) => (),
+        Err(e) => println!("{:?}", e),
+    }
+    std::fs::create_dir_all(directory.clone()).unwrap();
+
+    let feature_names: Vec<String> =
+        vec![ROOT_FEATURE_NAME.to_string(), LEAF_FEATURE_NAME.to_string()];
+
+    let mut queue =
+        SortingPriorityQueue::new_durable(feature_names.clone(), directory.clone()).unwrap();
+
+    let first_item: Vec<u8> = vec![4];
+    let last_item: Vec<u8> = vec![2];
+    let fairest_item: Vec<u8> = vec![1];
+
+    queue
+        .enqueue(
+            first_item.clone(),
+            vec![
+                FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
+                FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        )
+        .unwrap();
+
+    assert_eq!(queue.dequeue().unwrap(), (Some(first_item), 2));
+
+    drop(queue);
+
+    let mut queue = SortingPriorityQueue::new_durable(feature_names, directory.clone()).unwrap();
+
+    queue
+        .enqueue(
+            last_item.clone(),
+            vec![
+                FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 1),
+                FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        )
+        .unwrap();
+    queue
+        .enqueue(
+            fairest_item.clone(),
+            vec![
+                FeatureValue::new(ROOT_FEATURE_NAME.to_string(), 2),
+                FeatureValue::new(LEAF_FEATURE_NAME.to_string(), 1),
+            ],
+        )
+        .unwrap();
+    assert_eq!(queue.dequeue().unwrap(), (Some(fairest_item), 5));
+
+    assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 6));
+
+    assert_eq!(queue.dequeue().unwrap(), (None, 6));
+
+    match std::fs::remove_dir_all(directory.clone()) {
+        Ok(_) => (),
+        Err(e) => println!("{:?}", e),
+    }
 }

@@ -97,7 +97,7 @@ impl FeatureNode {
         for (i, value) in self.values.iter().enumerate() {
             let value_last_used_epoch_step = feature_value_to_epoch_step.get(value.hash)?;
 
-            if value_last_used_epoch_step <= lowest_epoch_step && value.items_at_index > 0 {
+            if value_last_used_epoch_step < lowest_epoch_step && value.items_at_index > 0 {
                 next = Some((i, value.hash));
                 lowest_epoch_step = value_last_used_epoch_step;
             }
@@ -317,7 +317,7 @@ impl FeatureSpace {
         values.push(value.clone());
 
         self.feature_value_to_epoch_step
-            .put_if_absent(value.hash, self.epoch_step()?)?;
+            .put_if_absent(value.hash, 0)?;
 
         self.feature_tree.put(
             current_node_index,
@@ -371,7 +371,7 @@ impl FeatureSpace {
                             feature_node.values.push(value.clone());
 
                             self.feature_value_to_epoch_step
-                                .put_if_absent(value.hash, self.epoch_step()?)?;
+                                .put_if_absent(value.hash, 0)?;
                         }
                     }
 
