@@ -3,6 +3,7 @@
 **/*.rs.bk
 target/
 **/vendor/*
+**/*_test.rs
 
 ## Python ##
 *.pyc
