@@ -3,6 +3,7 @@ use sp_error::Error;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::Relaxed;
 use uuid::Uuid;
+use log::{debug};
 
 enum StorageType {
     Memory,
@@ -192,9 +193,10 @@ impl ShardedHeap {
             },
         };
 
+        //TODO: We should check to see if the table exists and if it doesn't create it
         match DB::open(&heap.options, heap.folder_path.clone()) {
-            Ok(_) => {}
-            Err(_) => {}
+            Ok(_) => debug!("Created a fresh items table at {:?}", heap.folder_path),
+            Err(_) => debug!("Encountered an error opening the items table. Assuming an existing items table was found at {:?}", heap.folder_path)
         }
 
         Ok(heap)
@@ -214,6 +216,7 @@ impl ShardedHeap {
     pub fn push(&mut self, epoch: u64, key: u64, value: Vec<u8>) -> Result<(), Error> {
         let cfs = &DB::list_cf(&self.options, self.folder_path.clone())?;
         let db = &mut DB::open_cf(&self.options, self.folder_path.clone(), cfs)?;
+
         match db.cf_handle(&key.to_string()) {
             Some(cf_handle) => {
                 db.put_cf(cf_handle, epoch.to_be_bytes(), value)?;

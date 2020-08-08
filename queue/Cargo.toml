@@ -5,8 +5,8 @@ authors = ["Peter Travers <traverspw@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-lazy_static = "1.4.0"
 bincode = "1.2.1"
+lazy_static = "1.4.0"
 serde = { version = "1.0.107", features = ["derive"] }
 sp_storage = { path = "../storage" }
 sp_error = { path = "../error" }
