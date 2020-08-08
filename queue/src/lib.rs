@@ -3,7 +3,7 @@ use std::result::Result;
 use std::result::Result::{Err, Ok};
 pub mod feature_space;
 use feature_space::{create_hash, FeatureSpace, FeatureValue};
-use sp_storage::{Item, ShardedHeap};
+use sp_storage::ShardedHeap;
 
 #[allow(dead_code)]
 pub struct SortingPriorityQueue {
@@ -16,7 +16,7 @@ impl SortingPriorityQueue {
     pub fn new(features: Vec<String>) -> Result<SortingPriorityQueue, Error> {
         Ok(SortingPriorityQueue {
             feature_space: FeatureSpace::new(features, None)?,
-            items: ShardedHeap::new(),
+            items: ShardedHeap::new(None)?,
         })
     }
 
@@ -25,8 +25,8 @@ impl SortingPriorityQueue {
         folder_path: String,
     ) -> Result<SortingPriorityQueue, Error> {
         Ok(SortingPriorityQueue {
-            feature_space: FeatureSpace::new(features, Some(folder_path))?,
-            items: ShardedHeap::new(),
+            feature_space: FeatureSpace::new(features, Some(folder_path.clone()))?,
+            items: ShardedHeap::new(Some(folder_path))?,
         })
     }
 
@@ -53,7 +53,7 @@ impl SortingPriorityQueue {
 
             let current_epoch_step = self.feature_space.epoch_step()?;
 
-            self.items.push(hash, Item::new(data, current_epoch_step))?;
+            self.items.push(current_epoch_step, hash, data)?;
 
             Ok(current_epoch_step)
         }
@@ -72,7 +72,7 @@ impl SortingPriorityQueue {
             maybe_item = self.items.peek(next_leaf_feature)?;
         }
 
-        Ok(maybe_item.map(|item| item.data))
+        Ok(maybe_item)
     }
 
     pub fn dequeue(&mut self) -> Result<(Option<Vec<u8>>, u64), Error> {
@@ -80,7 +80,7 @@ impl SortingPriorityQueue {
 
         if let Some(next) = self.feature_space.use_next_leaf_feature()? {
             let maybe_next_item = self.items.pop(next)?;
-            next_item = maybe_next_item.map(|item| item.data);
+            next_item = maybe_next_item;
         }
 
         let epoch_step = self.feature_space.epoch_step()?;

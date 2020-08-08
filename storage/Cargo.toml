@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 sp_error = { path = "../error" }
+serde = { version = "1.0.107", features = ["derive"] }
 uuid = { version = "0.8", default-features = false, features = ["v4"] }
 
 [dependencies.rocksdb]

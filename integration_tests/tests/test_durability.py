@@ -12,3 +12,10 @@ def test_starts_with_non_zero_size(spq_client):
     result = spq_client.GetSize(spq_pb2.GetSizeRequest())
 
     assert result.size > 0, result.size
+
+
+@pytest.mark.durability
+def test_starts_with_existing_items(spq_client):
+    result = spq_client.Dequeue(spq_pb2.DequeueRequest())
+
+    assert result.hasItem == True

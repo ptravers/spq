@@ -418,7 +418,7 @@ fn must_increment_step_for_each_dequeue() {
 
     let enqueue_result = queue.enqueue(item.clone(), DEFAULT_FEATURES.clone());
 
-    assert_eq!(enqueue_result, Result::Ok(1));
+    assert_eq!(enqueue_result.unwrap(), 1);
 
     assert_eq!(queue.dequeue().unwrap(), (Some(item), 2));
 }
@@ -530,6 +530,40 @@ fn must_maintain_feature_space_between_instances_when_durable_and_queue_empty() 
     assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 6));
 
     assert_eq!(queue.dequeue().unwrap(), (None, 6));
+
+    match std::fs::remove_dir_all(directory.clone()) {
+        Ok(_) => (),
+        Err(e) => println!("{:?}", e),
+    }
+}
+
+#[test]
+fn must_retain_items_between_instances_when_durable() {
+    let directory = "/tmp/durable3".to_string();
+
+    match std::fs::remove_dir_all(directory.clone()) {
+        Ok(_) => (),
+        Err(e) => println!("{:?}", e),
+    }
+    std::fs::create_dir_all(directory.clone()).unwrap();
+
+    let mut queue =
+        SortingPriorityQueue::new_durable(DEFAULT_FEATURE_NAMES.to_vec(), directory.clone())
+            .unwrap();
+
+    let first_item: Vec<u8> = vec![4];
+
+    queue
+        .enqueue(first_item.clone(), DEFAULT_FEATURES.clone())
+        .unwrap();
+
+    drop(queue);
+
+    let mut queue =
+        SortingPriorityQueue::new_durable(DEFAULT_FEATURE_NAMES.to_vec(), directory.clone())
+            .unwrap();
+
+    assert_eq!(queue.dequeue().unwrap(), (Some(first_item), 2));
 
     match std::fs::remove_dir_all(directory.clone()) {
         Ok(_) => (),
