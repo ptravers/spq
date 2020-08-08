@@ -6,7 +6,6 @@ HIGH:
 - Add replication layer
 - Add cluster discovery
 - Add memoization in network layer
-- Add disk caching for recovery
 - Add tracing to all layers
 - Add regestering of a callback to be notified when new items arrive
 - Add callbacks fair scheduling each callback receives a fair number of fair jobs (?)
