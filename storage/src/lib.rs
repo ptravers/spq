@@ -195,7 +195,7 @@ impl ShardedHeap {
 
         //TODO: We should check to see if the table exists and if it doesn't create it
         match DB::open(&heap.options, heap.folder_path.clone()) {
-            Ok(_) => debug!("Created a fresh items table at {:?}", heap.folder_path),
+            Ok(_) => debug!("Either created a fresh items table or found an empty table at {:?}", heap.folder_path),
             Err(_) => debug!("Encountered an error opening the items table. Assuming an existing items table was found at {:?}", heap.folder_path)
         }
 
