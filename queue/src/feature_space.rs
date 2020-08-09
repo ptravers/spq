@@ -336,9 +336,6 @@ impl FeatureSpace {
         features: &mut Vec<FeatureValue>,
         leaf_index: u64,
     ) -> Result<(), Error> {
-        self.increment_total_items()?;
-        self.increment_epoch_step()?;
-
         let mut child_index = leaf_index;
         let mut i = 1;
         let currently_empty = self.feature_tree.is_empty();
@@ -390,6 +387,9 @@ impl FeatureSpace {
             child_index = current_node_index;
             i += 1;
         }
+
+        self.increment_total_items()?;
+        self.increment_epoch_step()?;
 
         Ok(())
     }
