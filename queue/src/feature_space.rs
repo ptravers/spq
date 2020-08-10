@@ -138,15 +138,15 @@ impl FeatureNode {
     }
 }
 
-const TOTAL_ITEMS_HASH: u64 = 0;
+const TOTAL_ITEMS_KEY: u64 = 0;
 
-const EPOCH_STEP_HASH: u64 = 1;
+const EPOCH_STEP_KEY: u64 = 1;
 
-const ROOT_INDEX_HASH: u64 = 2;
+const ROOT_INDEX_KEY: u64 = 2;
 
-const DIMENSION_HASH: u64 = 3;
+const DIMENSION_KEY: u64 = 3;
 
-const FEATURE_NAMES_HASH: u64 = 4;
+const FEATURE_NAMES_KEY: u64 = 4;
 
 pub struct FeatureSpace {
     feature_tree: Storage<FeatureNode>,
@@ -173,13 +173,13 @@ impl FeatureSpace {
                 .map(|folder_path| folder_path + "/metadata"),
         );
 
-        metadata_storage.put_if_absent(FEATURE_NAMES_HASH, feature_names_hash)?;
+        metadata_storage.put_if_absent(FEATURE_NAMES_KEY, feature_names_hash)?;
 
-        metadata_storage.put_if_absent(EPOCH_STEP_HASH, 0)?;
+        metadata_storage.put_if_absent(EPOCH_STEP_KEY, 0)?;
 
-        metadata_storage.put_if_absent(TOTAL_ITEMS_HASH, 0)?;
+        metadata_storage.put_if_absent(TOTAL_ITEMS_KEY, 0)?;
 
-        metadata_storage.put_if_absent(DIMENSION_HASH, features.len() as u64)?;
+        metadata_storage.put_if_absent(DIMENSION_KEY, features.len() as u64)?;
 
         Ok(FeatureSpace {
             feature_tree: Storage::new(
@@ -197,51 +197,51 @@ impl FeatureSpace {
     }
 
     pub fn epoch_step(&self) -> Result<u64, Error> {
-        self.metadata.get(EPOCH_STEP_HASH)
+        self.metadata.get(EPOCH_STEP_KEY)
     }
 
     fn increment_epoch_step(&mut self) -> Result<(), Error> {
         self.metadata
-            .update(EPOCH_STEP_HASH, |epoch_step| epoch_step + 1)
+            .update(EPOCH_STEP_KEY, |epoch_step| epoch_step + 1)
     }
 
     pub fn dimension(&self) -> Result<u64, Error> {
-        self.metadata.get(DIMENSION_HASH)
+        self.metadata.get(DIMENSION_KEY)
     }
 
     pub fn feature_names_hash(&self) -> Result<u64, Error> {
-        self.metadata.get(FEATURE_NAMES_HASH)
+        self.metadata.get(FEATURE_NAMES_KEY)
     }
 
     pub fn total_items(&self) -> Result<u64, Error> {
-        self.metadata.get(TOTAL_ITEMS_HASH)
+        self.metadata.get(TOTAL_ITEMS_KEY)
     }
 
     fn increment_total_items(&mut self) -> Result<(), Error> {
         self.metadata
-            .update(TOTAL_ITEMS_HASH, |total_items| total_items + 1)
+            .update(TOTAL_ITEMS_KEY, |total_items| total_items + 1)
     }
 
     fn decrement_total_items(&mut self) -> Result<(), Error> {
         self.metadata
-            .update(TOTAL_ITEMS_HASH, |total_items| total_items - 1)
+            .update(TOTAL_ITEMS_KEY, |total_items| total_items - 1)
     }
 
     fn set_root_index(&mut self, index: u64) -> Result<(), Error> {
-        let was_put = self.metadata.put_if_absent(ROOT_INDEX_HASH, index)?;
+        let was_put = self.metadata.put_if_absent(ROOT_INDEX_KEY, index)?;
 
         if was_put {
             Ok(())
         } else {
             Err(Error::new(format!(
                 "Queue already initialized with root node at {:?}",
-                ROOT_INDEX_HASH
+                ROOT_INDEX_KEY
             )))
         }
     }
 
     fn root_index(&self) -> Result<u64, Error> {
-        self.metadata.get(ROOT_INDEX_HASH)
+        self.metadata.get(ROOT_INDEX_KEY)
     }
 
     pub fn peek_next_leaf_feature(&self) -> Result<Option<u64>, Error> {
