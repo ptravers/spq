@@ -352,10 +352,10 @@ impl FeatureSpace {
 
             match self.feature_tree.get(current_node_index) {
                 Ok(mut feature_node) => {
-                    let maybe_value = feature_node.values.iter_mut().find(|feature_node_value| {
-                        feature_node_value.value == feature.value
-                            && feature_node_value.child_index == child_index
-                    });
+                    let maybe_value = feature_node
+                        .values
+                        .iter_mut()
+                        .find(|feature_node_value| feature_node_value.value == feature.value);
 
                     match maybe_value {
                         Some(value) => {

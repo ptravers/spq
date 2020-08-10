@@ -1,9 +1,9 @@
+use log::debug;
 use rocksdb::{ColumnFamily, IteratorMode, Options, DB};
 use sp_error::Error;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::Relaxed;
 use uuid::Uuid;
-use log::{debug};
 
 enum StorageType {
     Memory,
