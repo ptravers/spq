@@ -7,6 +7,7 @@ use tonic::{transport::Server, Code, Request, Response, Status};
 mod spq_generated {
     tonic::include_proto!("spq_generated");
 }
+use sp_queue::error::Error;
 use sp_queue::feature_space::FeatureValue;
 use sp_queue::SortingPriorityQueue;
 use spq_generated::enqueue_request::Feature;
@@ -30,6 +31,13 @@ fn to_feature_value(feature: Feature) -> FeatureValue {
     FeatureValue::new(feature.name, feature.value as usize)
 }
 
+fn to_status<V>(result: Result<V, Error>) -> Result<V, Status> {
+    result.map_err(|err| match err {
+        Error::Standard { message } => Status::new(Code::Internal, message),
+        Error::Empty { message } => Status::new(Code::Internal, message),
+    })
+}
+
 #[tonic::async_trait]
 impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
     async fn enqueue(
@@ -41,7 +49,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|mut queue| {
                 let add_item_request = _request.get_ref();
-                let size = queue.size()?;
+                let size = to_status(queue.size())?;
                 queue
                     .enqueue(
                         add_item_request.item.clone(),
@@ -66,8 +74,8 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
             .try_write()
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|mut queue| {
-                let (maybe_next, _) = queue.dequeue()?;
-                let size = queue.size()?;
+                let (maybe_next, _) = to_status(queue.dequeue())?;
+                let size = to_status(queue.size())?;
 
                 Ok(Response::new(ItemResponse {
                     has_item: maybe_next.is_some(),
@@ -85,8 +93,8 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
             .try_read()
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|queue| {
-                let maybe_next = queue.peek()?;
-                let size = queue.size()?;
+                let maybe_next = to_status(queue.peek())?;
+                let size = to_status(queue.size())?;
 
                 Ok(Response::new(ItemResponse {
                     has_item: maybe_next.is_some(),
@@ -104,7 +112,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
             .try_read()
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|queue| {
-                let size = queue.size()?;
+                let size = to_status(queue.size())?;
 
                 Ok(Response::new(GetSizeResponse { size: size as i64 }))
             })
@@ -118,7 +126,7 @@ impl SortingPriorityQueueService for DefaultSortingPriorityQueueService {
             .try_read()
             .map_err(|_| Status::new(Code::Unavailable, "Update in progress please retry"))
             .and_then(|queue| {
-                let epoch = queue.get_epoch()?;
+                let epoch = to_status(queue.get_epoch())?;
 
                 Ok(Response::new(GetEpochResponse {
                     epoch: epoch as i64,

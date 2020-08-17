@@ -1,6 +1,5 @@
 use std::error;
 use std::fmt;
-use tonic::{Code, Status};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Error {
@@ -39,15 +38,6 @@ impl From<Error> for String {
         match e {
             Error::Standard { message } => message,
             Error::Empty { message } => message,
-        }
-    }
-}
-
-impl From<Error> for Status {
-    fn from(e: Error) -> Status {
-        match e {
-            Error::Standard { message } => Status::new(Code::Internal, message),
-            Error::Empty { message } => Status::new(Code::Internal, message),
         }
     }
 }

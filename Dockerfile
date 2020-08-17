@@ -10,8 +10,6 @@ RUN apt-get update && \
     ln -s /usr/bin/g++ /usr/bin/musl-g++
 
 COPY queue/ /app/queue/
-COPY error/ /app/error/
-COPY storage/ /app/storage/
 COPY server/ /app/server/
 
 WORKDIR /app/server

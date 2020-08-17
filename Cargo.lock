@@ -925,33 +925,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp_error"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "rocksdb",
- "tonic",
-]
-
-[[package]]
 name = "sp_queue"
 version = "0.1.0"
 dependencies = [
  "bincode",
  "lazy_static",
- "serde",
- "sp_error",
- "sp_storage",
-]
-
-[[package]]
-name = "sp_storage"
-version = "0.1.0"
-dependencies = [
  "log",
  "rocksdb",
  "serde",
- "sp_error",
  "uuid",
 ]
 

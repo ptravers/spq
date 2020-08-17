@@ -1,9 +1,12 @@
-use sp_error::Error;
 use std::result::Result;
 use std::result::Result::{Err, Ok};
 pub mod feature_space;
 use feature_space::{create_hash, FeatureSpace, FeatureValue};
-use sp_storage::ShardedHeap;
+pub mod sharded_heap;
+pub mod storage;
+use sharded_heap::ShardedHeap;
+pub mod error;
+use error::Error;
 
 #[allow(dead_code)]
 pub struct SortingPriorityQueue {

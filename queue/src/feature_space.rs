@@ -1,6 +1,6 @@
+use crate::error::Error;
+use crate::storage::Storage;
 use serde::{Deserialize, Serialize};
-use sp_error::Error;
-use sp_storage::Storage;
 use std::collections::hash_map::DefaultHasher;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
