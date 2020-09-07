@@ -23,6 +23,9 @@ vet:
 build: fmt vet
 	cargo build
 
+build-release: fmt vet
+	cargo build --release
+
 unit-test: build
 	cargo test --all
 
