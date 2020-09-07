@@ -157,7 +157,8 @@ impl FeatureSpace {
     }
 
     pub fn decrement_total_items(&mut self) -> Result<u64, Error> {
-        self.metadata.update(&TOTAL_ITEMS_KEY, |total_items| total_items - 1)
+        self.metadata
+            .update(&TOTAL_ITEMS_KEY, |total_items| total_items - 1)
     }
 
     fn set_root_index(&mut self, index: u64) -> Result<(), Error> {
@@ -292,9 +293,10 @@ impl FeatureSpace {
         // Insert in to the graph in reverse so that we create the child before
         // the parent. We need to have created the child before the parent to have
         // a child id to add as one of the parents children.
-        feature_values.reverse();
+        let mut reversed_feature_values = feature_values.clone();
+        reversed_feature_values.reverse();
 
-        for feature_value in feature_values.clone().iter() {
+        for feature_value in reversed_feature_values.iter() {
             let mut next_feature_values = all_feature_values_natural_order.clone();
             next_feature_values.truncate(height);
 
@@ -316,13 +318,11 @@ impl FeatureSpace {
                 .get(&current_node_index, &value_hash);
 
             match current_index {
-                Ok(_) => {
-                    self.feature_node_value_items_at_index.update(
-                        &current_node_index,
-                        &value_hash,
-                        |count| count + 1,
-                    )?
-                }
+                Ok(_) => self.feature_node_value_items_at_index.update(
+                    &current_node_index,
+                    &value_hash,
+                    |count| count + 1,
+                )?,
                 Err(Error::Empty { .. }) if has_node => {
                     self.feature_node_value_items_at_index.put(
                         &current_node_index,

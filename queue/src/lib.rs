@@ -53,9 +53,7 @@ impl SortingPriorityQueue {
 
             let hash = create_hash(&features);
 
-            let mut features_copy = features;
-
-            self.feature_space.add_item(&mut features_copy, hash)?;
+            self.feature_space.add_item(features, hash)?;
 
             let current_epoch_step = self.feature_space.epoch_step()?;
 
