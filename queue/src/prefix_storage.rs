@@ -10,10 +10,8 @@ fn create_composite_key(prefix: &u64, key: &u64) -> [u8; 16] {
     let prefix_bytes = prefix.to_be_bytes();
     let key_bytes = key.to_be_bytes();
 
-    for i in 0..8 {
-        composite_key[i] = prefix_bytes[i];
-        composite_key[i + 8] = key_bytes[i];
-    }
+    composite_key[..8].clone_from_slice(&prefix_bytes[..8]);
+    composite_key[8..(8 + 8)].clone_from_slice(&key_bytes[..8]);
 
     composite_key
 }
@@ -123,7 +121,7 @@ impl PrefixStorage {
             if &integer_prefix == prefix {
                 has_prefix = true;
 
-                break
+                break;
             }
         }
 
