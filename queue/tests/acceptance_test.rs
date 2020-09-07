@@ -247,6 +247,7 @@ fn should_be_drained_by_feature_heirarchy() {
     assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 8));
 
     assert_eq!(queue.dequeue().unwrap(), (None, 8));
+    assert_eq!(queue.size().unwrap(), 0);
 }
 
 #[test]
@@ -306,9 +307,15 @@ fn must_guarantee_fair_retrieval_by_feature_value_regardless_of_path() {
         )
         .unwrap();
 
+    assert_eq!(queue.size().unwrap(), 3);
+
     assert_eq!(queue.dequeue().unwrap(), (Some(first_item), 4));
 
+    assert_eq!(queue.size().unwrap(), 2);
+
     assert_eq!(queue.dequeue().unwrap(), (Some(fairest_item), 5));
+
+    assert_eq!(queue.size().unwrap(), 1);
 
     assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 6));
 }
@@ -333,6 +340,7 @@ fn must_guarantee_fair_retrieval_after_items_have_been_removed() {
             ],
         )
         .unwrap();
+    assert_eq!(queue.size().unwrap(), 1);
     assert_eq!(queue.dequeue().unwrap(), (Some(first_item), 2));
 
     queue
@@ -354,8 +362,10 @@ fn must_guarantee_fair_retrieval_after_items_have_been_removed() {
         )
         .unwrap();
 
+    assert_eq!(queue.size().unwrap(), 2);
     assert_eq!(queue.dequeue().unwrap(), (Some(fairest_item), 5));
     assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 6));
+    assert_eq!(queue.size().unwrap(), 0);
 }
 
 #[test]
@@ -381,6 +391,7 @@ fn after_being_drained_must_accept_and_return_new_items() {
     assert_eq!(queue.dequeue().unwrap(), (Some(first_item), 2));
 
     assert_eq!(queue.dequeue().unwrap(), (None, 2));
+    assert_eq!(queue.size().unwrap(), 0);
 
     queue
         .enqueue(
@@ -395,6 +406,7 @@ fn after_being_drained_must_accept_and_return_new_items() {
     assert_eq!(queue.dequeue().unwrap(), (Some(last_item), 4));
 
     assert_eq!(queue.dequeue().unwrap(), (None, 4));
+    assert_eq!(queue.size().unwrap(), 0);
 }
 
 #[test]

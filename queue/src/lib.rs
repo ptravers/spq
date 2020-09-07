@@ -3,9 +3,10 @@ use std::result::Result::{Err, Ok};
 pub mod feature_space;
 use feature_space::{create_hash, FeatureSpace, FeatureValue};
 pub mod sharded_heap;
-pub mod storage;
 use sharded_heap::ShardedHeap;
 pub mod error;
+pub mod prefix_storage;
+pub mod storage;
 use error::Error;
 
 #[allow(dead_code)]
@@ -39,7 +40,9 @@ impl SortingPriorityQueue {
                 "Invalid feature vector must have same size as feature space".to_string(),
             ))
         } else {
-            let feature_names_hash = create_hash(&features, false);
+            let feature_names: Vec<&String> =
+                features.iter().map(|feature| feature.get_name()).collect();
+            let feature_names_hash = create_hash(&feature_names);
 
             if feature_names_hash != self.feature_space.feature_names_hash()? {
                 return Err(Error::new(
@@ -48,7 +51,7 @@ impl SortingPriorityQueue {
                 ));
             }
 
-            let hash = create_hash(&features, true);
+            let hash = create_hash(&features);
 
             let mut features_copy = features;
 
@@ -57,6 +60,7 @@ impl SortingPriorityQueue {
             let current_epoch_step = self.feature_space.epoch_step()?;
 
             self.items.push(current_epoch_step, hash, data)?;
+            self.feature_space.increment_total_items()?;
 
             Ok(current_epoch_step)
         }
@@ -84,6 +88,8 @@ impl SortingPriorityQueue {
         if let Some(next) = self.feature_space.use_next_leaf_feature()? {
             let maybe_next_item = self.items.pop(next)?;
             next_item = maybe_next_item;
+
+            self.feature_space.decrement_total_items()?;
         }
 
         let epoch_step = self.feature_space.epoch_step()?;

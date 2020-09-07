@@ -9,10 +9,17 @@ pub enum StorageType {
     Durable,
 }
 
-type DeserializeFn<V> = fn(value: V) -> Result<Vec<u8>, Error>;
-type SerializeFn<V> = fn(value: Vec<u8>) -> Result<V, Error>;
+pub type DeserializeFn<V> = fn(value: V) -> Result<Vec<u8>, Error>;
+pub type SerializeFn<V> = fn(value: Vec<u8>) -> Result<V, Error>;
 
-pub struct Storage<V> {
+pub const INTEGER_TO_BYTES: DeserializeFn<u64> = |integer| Ok(integer.to_be_bytes().to_vec());
+pub const INTEGER_FROM_BYTES: SerializeFn<u64> = |bytes| {
+    let mut sized_bytes: [u8; 8] = Default::default();
+    sized_bytes.copy_from_slice(&bytes[0..8]);
+    Ok(u64::from_be_bytes(sized_bytes))
+};
+
+pub struct Storage<V: Copy> {
     storage_type: StorageType,
     size: AtomicUsize,
     folder_path: String,
@@ -20,14 +27,47 @@ pub struct Storage<V> {
     from_bytes: SerializeFn<V>,
 }
 
-impl<V> Storage<V> {
+impl<V> Storage<V>
+where
+    V: Copy,
+{
     pub fn new_integer(maybe_folder_path: Option<String>) -> Storage<u64> {
-        let to_bytes: DeserializeFn<u64> = |integer| Ok(integer.to_be_bytes().to_vec());
-        let from_bytes: SerializeFn<u64> = |bytes| {
-            let mut sized_bytes: [u8; 8] = Default::default();
-            sized_bytes.copy_from_slice(&bytes[0..8]);
-            Ok(u64::from_be_bytes(sized_bytes))
+        match maybe_folder_path {
+            Some(folder_path) => Storage {
+                storage_type: StorageType::Durable,
+                size: AtomicUsize::new(0),
+                folder_path,
+                to_bytes: INTEGER_TO_BYTES,
+                from_bytes: INTEGER_FROM_BYTES,
+            },
+            None => Storage {
+                storage_type: StorageType::Memory,
+                size: AtomicUsize::new(0),
+                folder_path: format!("/tmp/spqr/{:?}", Uuid::new_v4()),
+                to_bytes: INTEGER_TO_BYTES,
+                from_bytes: INTEGER_FROM_BYTES,
+            },
+        }
+    }
+
+    pub fn new_bool(maybe_folder_path: Option<String>) -> Storage<bool> {
+        let to_bytes: DeserializeFn<bool> = |boolean| {
+            if boolean {
+                Ok(vec![1])
+            } else {
+                Ok(vec![0])
+            }
         };
+        let from_bytes: SerializeFn<bool> = |bytes| {
+            if bytes == vec![1] {
+                Ok(true)
+            } else if bytes == vec![0] {
+                Ok(false)
+            } else {
+                Err(Error::new("Item not a valid boolean".to_string()))
+            }
+        };
+
         match maybe_folder_path {
             Some(folder_path) => Storage {
                 storage_type: StorageType::Durable,
@@ -69,7 +109,7 @@ impl<V> Storage<V> {
         }
     }
 
-    fn _put(&mut self, db: &DB, key: u64, value: V) -> Result<(), Error> {
+    fn _put(&mut self, db: &DB, key: &u64, value: V) -> Result<(), Error> {
         self.size.fetch_add(1, Relaxed);
 
         let bytes = (self.to_bytes)(value)?;
@@ -79,7 +119,7 @@ impl<V> Storage<V> {
         Ok(())
     }
 
-    pub fn put(&mut self, key: u64, value: V) -> Result<(), Error> {
+    pub fn put(&mut self, key: &u64, value: V) -> Result<(), Error> {
         let db = &DB::open_default(self.folder_path.clone())?;
 
         self._put(db, key, value)?;
@@ -94,7 +134,7 @@ impl<V> Storage<V> {
         }
     }
 
-    pub fn put_if_absent(&mut self, key: u64, value: V) -> Result<bool, Error> {
+    pub fn put_if_absent(&mut self, key: &u64, value: V) -> Result<bool, Error> {
         let db = &DB::open_default(self.folder_path.clone())?;
 
         match self._get(db, key) {
@@ -115,7 +155,7 @@ impl<V> Storage<V> {
         }
     }
 
-    fn _get(&self, db: &DB, key: u64) -> Result<V, Error> {
+    fn _get(&self, db: &DB, key: &u64) -> Result<V, Error> {
         let maybe_bytes = db.get(&key.to_be_bytes())?;
 
         let bytes = maybe_bytes.ok_or_else(|| Error::Empty {
@@ -125,13 +165,13 @@ impl<V> Storage<V> {
         (self.from_bytes)(bytes)
     }
 
-    pub fn get(&self, key: u64) -> Result<V, Error> {
+    pub fn get(&self, key: &u64) -> Result<V, Error> {
         let db = &DB::open_default(self.folder_path.clone())?;
 
         self._get(db, key)
     }
 
-    pub fn update(&mut self, key: u64, f: fn(value: V) -> V) -> Result<(), Error> {
+    pub fn update(&mut self, key: &u64, f: fn(value: V) -> V) -> Result<V, Error> {
         let db = &DB::open_default(self.folder_path.clone())?;
         let value = self._get(db, key)?;
 
@@ -140,11 +180,11 @@ impl<V> Storage<V> {
         self._put(db, key, new_value)?;
 
         match self.storage_type {
-            StorageType::Memory => Ok(()),
+            StorageType::Memory => Ok(new_value),
             StorageType::Durable => {
                 db.flush()?;
 
-                Ok(())
+                Ok(new_value)
             }
         }
     }
@@ -154,7 +194,10 @@ impl<V> Storage<V> {
     }
 }
 
-impl<V> Drop for Storage<V> {
+impl<V> Drop for Storage<V>
+where
+    V: Copy,
+{
     fn drop(&mut self) {
         match self.storage_type {
             StorageType::Memory => match DB::destroy(&Options::default(), self.folder_path.clone())

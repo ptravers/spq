@@ -28,14 +28,14 @@ vet:
 build: fmt fix
 	cargo build
 
-unit-test:
+unit-test: build
 	cargo test --all
 
 integration-test:
 	$(MAKE) -C integration_tests build
 	$(MAKE) -C integration_tests test
 
-test: build unit-test integration-test
+test: unit-test integration-test
 
 clean:
 	cargo clean
