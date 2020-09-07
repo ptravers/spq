@@ -15,17 +15,12 @@ help:
 
 
 fmt:
-	cargo fmt
-
-fix: vet
-	#	doesn't currently work see
-	#	https://github.com/rust-lang/rust-clippy/issues/3837
-#	cargo fix -Z unstable-options --clippy
+	cargo fmt -- --check
 
 vet:
 	cargo clippy
 
-build: fmt fix
+build: fmt vet
 	cargo build
 
 unit-test: build
