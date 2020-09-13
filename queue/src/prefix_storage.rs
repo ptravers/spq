@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::storage::{StorageType, INTEGER_FROM_BYTES};
-use rocksdb::{Options, DB};
+use rocksdb::{Options, SliceTransform, DB};
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::Relaxed;
 use uuid::Uuid;
@@ -38,6 +38,18 @@ impl PrefixStorage {
         }
     }
 
+    fn get_db(&self) -> Result<DB, Error> {
+        let mut opts = Options::default();
+
+        let slice_transformer = SliceTransform::create_fixed_prefix(8);
+        opts.set_prefix_extractor(slice_transformer);
+        opts.create_if_missing(true);
+
+        let db = DB::open(&opts, self.folder_path.clone())?;
+
+        Ok(db)
+    }
+
     fn _get(&self, db: &DB, key: [u8; 16]) -> Result<u64, Error> {
         let maybe_bytes = db.get(&key)?;
 
@@ -49,7 +61,7 @@ impl PrefixStorage {
     }
 
     pub fn get(&self, prefix: &u64, key: &u64) -> Result<u64, Error> {
-        let db = &DB::open_default(self.folder_path.clone())?;
+        let db = &self.get_db()?;
 
         let maybe_bytes = db.get(&create_composite_key(prefix, key))?;
 
@@ -80,7 +92,7 @@ impl PrefixStorage {
     }
 
     pub fn put(&mut self, prefix: &u64, key: &u64, value: u64) -> Result<(), Error> {
-        let db = &DB::open_default(self.folder_path.clone())?;
+        let db = &self.get_db()?;
 
         self.size.fetch_add(1, Relaxed);
 
@@ -97,7 +109,7 @@ impl PrefixStorage {
         key: &u64,
         f: fn(value: u64) -> u64,
     ) -> Result<(), Error> {
-        let db = &DB::open_default(self.folder_path.clone())?;
+        let db = &self.get_db()?;
         let composite_key = create_composite_key(prefix, key);
         let value = self._get(db, composite_key)?;
 
@@ -109,21 +121,9 @@ impl PrefixStorage {
     }
 
     pub fn has_prefix(&self, prefix: &u64) -> Result<bool, Error> {
-        let db = &DB::open_default(self.folder_path.clone())?;
+        let db = &self.get_db()?;
 
-        let mut has_prefix = false;
-
-        for (key, _) in db.prefix_iterator(prefix.to_be_bytes()) {
-            let integer_prefix = (INTEGER_FROM_BYTES)(key[0..8].to_vec())?;
-
-            //FIXME: Checking the prefix like this is an ugly hack as prefix
-            // iterator does not seem to actually filter the prefix as one would expect.
-            if &integer_prefix == prefix {
-                has_prefix = true;
-
-                break;
-            }
-        }
+        let has_prefix = db.prefix_iterator(prefix.to_be_bytes()).next().is_some();
 
         Ok(has_prefix)
     }
@@ -133,18 +133,15 @@ impl PrefixStorage {
         prefix: &u64,
         check: fn(value: u64) -> bool,
     ) -> Result<Vec<u64>, Error> {
-        let db = &DB::open_default(self.folder_path.clone())?;
+        let db = &self.get_db()?;
 
         let mut keys: Vec<u64> = vec![];
 
         for (key, value) in db.prefix_iterator(prefix.to_be_bytes()) {
             let integer_value = (INTEGER_FROM_BYTES)(value.to_vec())?;
             let integer_key = (INTEGER_FROM_BYTES)(key[8..16].to_vec())?;
-            let integer_prefix = (INTEGER_FROM_BYTES)(key[0..8].to_vec())?;
 
-            //FIXME: Checking the prefix like this is an ugly hack as prefix
-            // iterator does not seem to actually filter the prefix as one would expect.
-            if (check)(integer_value) && &integer_prefix == prefix {
+            if (check)(integer_value) {
                 keys.push(integer_key);
             }
         }
@@ -153,19 +150,14 @@ impl PrefixStorage {
     }
 
     pub fn get_at_prefix(&self, prefix: &u64) -> Result<Vec<u64>, Error> {
-        let db = &DB::open_default(self.folder_path.clone())?;
+        let db = &self.get_db()?;
 
         let mut values: Vec<u64> = vec![];
 
-        for (key, value) in db.prefix_iterator(prefix.to_be_bytes()) {
+        for (_, value) in db.prefix_iterator(prefix.to_be_bytes()) {
             let integer_value = (INTEGER_FROM_BYTES)(value.to_vec())?;
-            let integer_prefix = (INTEGER_FROM_BYTES)(key[0..8].to_vec())?;
 
-            //FIXME: Checking the prefix like this is an ugly hack as prefix
-            // iterator does not seem to actually filter the prefix as one would expect.
-            if &integer_prefix == prefix {
-                values.push(integer_value);
-            }
+            values.push(integer_value);
         }
 
         Ok(values)
