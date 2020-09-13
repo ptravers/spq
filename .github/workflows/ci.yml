@@ -9,6 +9,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Check format
+      run: make fmt-ci
     - name: Build
       run: make build
     - name: Run tests

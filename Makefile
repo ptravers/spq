@@ -15,7 +15,7 @@ help:
 
 
 fmt:
-	cargo fmt -- --check
+	cargo fmt
 
 vet:
 	cargo clippy
@@ -41,3 +41,6 @@ clean:
 
 update:
 	cargo update
+
+fmt-ci:
+	cargo fmt -- --check
