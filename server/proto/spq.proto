@@ -4,19 +4,22 @@ package spq_generated;
 
 service SortingPriorityQueueService {
   rpc Dequeue(DequeueRequest) returns (ItemResponse) {}
-  rpc PeekNextItem(PeekItemRequest) returns (ItemResponse) {}
+  rpc Peek(PeekRequest) returns (ItemResponse) {}
   rpc GetSize(GetSizeRequest) returns (GetSizeResponse) {}
   rpc Enqueue(EnqueueRequest) returns (EnqueueResponse) {}
   rpc GetEpoch(GetEpochRequest) returns (GetEpochResponse) {}
+  rpc CreateQueue(CreateQueueRequest) returns (QueueResponse) {}
+}
+
+message Feature {
+  int64 value = 1;
+  string name = 2;
 }
 
 message EnqueueRequest {
-  message feature {
-    int64 value = 1;
-    string name = 2;
-  }
   bytes item = 1;
-  repeated feature features = 2;
+  repeated Feature features = 2;
+  string queueName = 3;
 }
 
 message EnqueueResponse {
@@ -24,16 +27,19 @@ message EnqueueResponse {
 }
 
 message GetSizeRequest {
+  string queueName = 1;
 }
 
 message GetSizeResponse {
   int64 size = 1;
 }
 
-message PeekItemRequest {
+message PeekRequest {
+  string queueName = 1;
 }
 
 message DequeueRequest {
+  string queueName = 1;
 }
 
 message ItemResponse {
@@ -43,10 +49,26 @@ message ItemResponse {
 }
 
 message GetEpochRequest {
+  string queueName = 1;
 }
 
 message GetEpochResponse {
   int64 epoch = 1;
+}
+
+enum Type {
+  IN_MEMORY = 0;
+  DURABLE = 1;
+}
+
+message CreateQueueRequest {
+  string name = 1;
+  Type queueType = 2;
+  repeated string features = 3;
+}
+
+message QueueResponse {
+  string name = 1;
 }
 
 service HealthService {
